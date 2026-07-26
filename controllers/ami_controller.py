@@ -42,16 +42,11 @@ class AmiController:
 
         owner = data_ec2.VERSION_OS[name_os][verion_os]["owner"]
         filtro = data_ec2.VERSION_OS[name_os][verion_os]["filter"]
-        flag,code = self.manager_root.ami.get_ami_id(owner,filtro)
-
-        if not flag:
-            handle_aws_error(code)
-            return
+        response = self.manager_root.ami.get_ami_id(owner,filtro)
         
-        list_rows,dict_ami_id = self.manager_root.ami.prepare_data_ami(code)
+        list_rows,dict_ami_id = self.manager_root.ami.prepare_data_ami(response)
         header = data_ec2.header_selected_ami["header"]
         title = data_ec2.header_selected_ami["title"]
-
         print_table_ami(list_header=header,title=title,list_rows=list_rows)
         return prompt_general.choice_options_table(dict_data=dict_ami_id,context="de la AMI ID deseada")
     

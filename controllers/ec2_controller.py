@@ -1,9 +1,10 @@
 import threading
 import logging
-from ui.messages import print_message,spinner,handle_aws_error
+from ui.messages import print_message,spinner
 from controllers.deploy_flow import build_instance_config
 from ui import prompt_general,tables
 from data import data_ec2
+
 
 
 logger = logging.getLogger(__name__)
@@ -27,13 +28,12 @@ class EC2Controller:
             hilo_spinner.join()
 
         if not correct_operation:
-                        print_message(f"No se pudo verificar el estado de la instancia, por favor validar en |1-Listar instancias",style_message="red italic")
+                        print_message(f"No se pudo verificar el estado de la instancia, por favor validar su estado  |1-Listar instancias",style_message="red italic")
                         return False
         logger.info(f"EC2 desplegado correctamente, ID : {instance_id}")
         print_message(message=msg_succes,style_message="green italic")
         return True
-
-         
+        
     def run_ec2(self):
         
         while True:
@@ -42,64 +42,34 @@ class EC2Controller:
             prompt_general.build_panel_deploy_ec2(data=config_instace)
             confirmation = prompt_general.confirmation_config(data=config_instace)
             match confirmation:
-                 case "cancel":
-                      return
                  case "confirm":
                       break
                  case "retry":
                       continue
 
-        flag,code = self.manager_root.ec2.run_ec2(config_instace)
-        if not flag:
-            handle_aws_error(code)
-            logger.error(f"Error al lanzar instancia : {code}")
-            return
+        response = self.manager_root.ec2.run_ec2(config_instace)
         self.wait_with_spinner(msg_init=" 🚀-Desplegando instancia...",
                                 msg_succes="Instancia desplegada con extio\n",
                                 target_state="running",
-                                instance_id=code)
+                                instance_id=response)
 
     def show_instances(self):
 
-        flag_response,response = self.manager_root.ec2.describe_ec2()
-
-        if not flag_response:
-            handle_aws_error(response)
-            return
-        
+        response = self.manager_root.ec2.describe_ec2()
         dict_ec2_id,list_rows = self.manager_root.ec2.format_data_ec2(response)
-
-        if not list_rows:
-            print_message("No hay instancias existentes en esta region.",style_message="yellow italic")
-            return
-
         print("\n\n")
         tables.print_table_ec2(list_rows=list_rows,title="Listado de instancias")
-        logger.info("EC2 listadas correctamente.")
 
     def operation_ec2(self,selection):
 
-        flag_describe_ec2,response = self.manager_root.ec2.describe_ec2()
-        if not flag_describe_ec2:
-            handle_aws_error(response)
-            return
-
+        response = self.manager_root.ec2.describe_ec2()
         dict_id_ec2,filas_tabulate = self.manager_root.ec2.format_data_ec2(response)
-        if not filas_tabulate:
-            print_message("No hay instancias existentes en esta region.",style_message="yellow italic")
-            return
-        
         self.show_instances()
-        instance_id = prompt_general.choice_options_table(dict_id_ec2,context="de la instancia deseada")
-
-        if instance_id == "cancel":
-            return
-
-        msg_init,target_state,msg_finally = data_ec2.pameter_operation_ec2[selection]
         
-        if target_state == "terminated" and  not prompt_general.confirmation():
-            print_message("Operacion cancelada por el usuario",style_message="yellow italic")
-            return
+        instance_id = prompt_general.choice_options_table(dict_id_ec2,context="de la instancia deseada")
+        msg_init,target_state,msg_finally = data_ec2.pameter_operation_ec2[selection]
+        if target_state == "terminated":
+            prompt_general.confirmation()
 
         metodos_ec2 = {
             "3": self.manager_root.ec2.init_ec2,
@@ -107,13 +77,8 @@ class EC2Controller:
             "5": self.manager_root.ec2.stop_ec2,
             "6": self.manager_root.ec2.terminate_ec2
             }
-
-        flag,code = metodos_ec2[selection](instance_id)
-        if not flag:
-            handle_aws_error(code)
-            return
-
+        response = metodos_ec2[selection](instance_id)
         self.wait_with_spinner(msg_init=msg_init,
                                 msg_succes=f"{msg_finally}\n",
                                 target_state=target_state,
-                                instance_id=code)
+                                instance_id=response)

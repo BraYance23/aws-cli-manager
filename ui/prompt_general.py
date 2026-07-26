@@ -5,6 +5,7 @@ from rich.panel import Panel
 from rich.align import Align
 from rich import box
 from typing import Literal
+from exceptions import UserCancelOperation
 
 console = Console()
 
@@ -28,7 +29,8 @@ def choice_options_table(dict_data:dict,context:str)-> str:
         elif choice in dict_data:
             return dict_data[choice]
         elif choice == "0":
-            return "cancel"
+            raise UserCancelOperation()
+            
 
         console.print("[yellow italic]\nValor ingresado no esta en el rango valido.[/yellow italic]\n",justify="center")
 
@@ -45,9 +47,8 @@ def choice_options_menu(dict_options:dict)-> str:
             continue
         return choice
     
-def confirmation_config(data:dict)-> Literal["confirm","cancel","retry"]:
-
-    
+def confirmation_config(data:dict)-> Literal["confirm","retry"]:
+ 
     while True:
         print("\n")
         confirmation_user = Prompt.ask(center_text(text="¿Los datos ingresados son correctos? [S/N] | [0] Volver al menú anterior ")).strip().upper()
@@ -58,21 +59,21 @@ def confirmation_config(data:dict)-> Literal["confirm","cancel","retry"]:
 
         if confirmation_user == "S":
             return "confirm"
-        elif confirmation_user == "0":
-            return "cancel"
-        else:
+        elif confirmation_user == "N":
             return "retry"
+        raise UserCancelOperation()
 
 def confirmation()-> bool:
 
     while True:
+
         choice = Prompt.ask(center_text("Esta acción es irreversible, desea continuar S/N ")).strip().upper()
-
-        if "S" != choice != "N":
-            console.print("Valor ingresado no valido, por favor confirmar operacion.")
-            continue
-
-        return choice == "S"
+        if choice == "S":
+            return True
+        elif choice == "N":
+            raise UserCancelOperation()
+        console.print("Valor ingresado no valido, por favor confirmar operacion.")
+     
 
 def build_panel_rules_sg(data:dict):
 

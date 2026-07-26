@@ -1,7 +1,8 @@
 from pathlib import Path
 import logging
 import boto3
-from botocore.exceptions import ClientError,NoCredentialsError
+from botocore.exceptions import ClientError
+from exceptions import AWSError,NoKeyPairs
 
 
 logger = logging.getLogger(__name__)
@@ -13,24 +14,24 @@ class ManageKeyPairs:
         self.ec2 = boto3.client("ec2",region_name = self.region_name)
 
 
-    def request_key_pairs(self)-> tuple[bool,dict | str]:
+    def request_key_pairs(self)-> dict:
 
         try:
             response = self.ec2.describe_key_pairs()
-            return True,response
+            return response
             
         except ClientError as e:
             code = e.response["Error"]["Code"]
-            return False,code
-        
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
+            raise AWSError(code=code)
       
     def format_data(self,response:dict)-> tuple[dict,list]:
         
         list_rows = []
         dict_key_id = {}
 
+        if not response["KeyPairs"]:
+            raise NoKeyPairs(region=self.region_name)
+        
         for indice,key in enumerate(response["KeyPairs"],start=1):
 
             fecha = key.get("CreateTime")
@@ -47,20 +48,16 @@ class ManageKeyPairs:
     
         return dict_key_id,list_rows
 
-    def generate_key_pair(self, key_name:str)-> tuple[bool,str]:
+    def generate_key_pair(self, key_name:str)-> str:
 
         try:
             response = self.ec2.create_key_pair(KeyName=key_name)
             private_key = response["KeyMaterial"]
-
-            return True,private_key
+            return private_key
         
         except ClientError as e:
             code = e.response["Error"]["Code"]
-            return False,code
-
-        except NoCredentialsError as error:
-            return False,"No se encontraron credenciales"
+            raise AWSError(code=code)
 
     def request_name_key(self)-> str:
 
@@ -71,38 +68,29 @@ class ManageKeyPairs:
             
             print("No se puede crear una llave sin nombre")
             
-    def save_key_pair(self,private_key:str,key_name:str)-> tuple[bool,Path | str]:
+    def save_key_pair(self,private_key:str,key_name:str)-> Path:
 
-        try:
-            key_path = Path.home()/".ssh"/f"{key_name}.pem"
-            key_path.parent.mkdir(parents=True,exist_ok=True)
-            key_path.write_text(private_key)
-            key_path.chmod(0o600)
-            return True,key_path
+        key_path = Path.home()/".ssh"/f"{key_name}.pem"
+        key_path.parent.mkdir(parents=True,exist_ok=True)
+        key_path.write_text(private_key)
+        key_path.chmod(0o600)
+        return key_path
 
-        except Exception as error:
-            return False,"ErrorSaveKey"
 
-    def delete_key_pair(self,key_delete:str)-> tuple[bool,str]:
+    def delete_key_pair(self,key_delete:str)-> str:
 
         try:
             self.ec2.delete_key_pair(KeyName=key_delete)
-            return True,key_delete
+            return key_delete
 
         except ClientError as error:
             code = error.response["Error"]["Code"]
-            return False,code
-        
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
+            raise AWSError(code=code)
 
-    def summary_key_pairs(self):
+    def summary_key_pairs(self)-> int:
 
         key_pairs_total = 0
-        flag,response = self.request_key_pairs()
-
-        if not flag:
-            return key_pairs_total
+        response = self.request_key_pairs()
 
         list_key_pairs = response["KeyPairs"]
         return len(list_key_pairs)

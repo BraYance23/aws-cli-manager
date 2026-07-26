@@ -1,8 +1,9 @@
 import logging
 from datetime import datetime
 import boto3
-from botocore.exceptions import ClientError,NoCredentialsError
+from botocore.exceptions import ClientError
 from data import data_ec2
+from exceptions import AWSError
 
 
 logger = logging.getLogger(__name__)
@@ -26,14 +27,11 @@ class ManageAmi:
                 ]
             )
 
-            return True,response
+            return response
         
         except ClientError as e:
             code = e.response["Error"]["Code"]
-            return False,code
-
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
+            raise AWSError(code=code)
 
     def prepare_data_ami(self,data_ami:dict)-> tuple[list,dict]:
 

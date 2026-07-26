@@ -2,6 +2,7 @@ import logging
 import  time
 import boto3
 from botocore.exceptions import ClientError,NoCredentialsError,WaiterError
+from exceptions import AWSError,CredentialsNotFound,NoEC2Instances
 from data.data_ec2 import colors_state
 
 
@@ -15,38 +16,30 @@ class ManageEc2:
         self.ec2 = boto3.client("ec2",region_name = self.region_name)
        
 
-    def describe_ec2(self)-> tuple[bool,dict | str]:
+    def describe_ec2(self)-> str:
 
         try:
             response = self.ec2.describe_instances()
-            return True,response
+            return response
 
         except ClientError as e:
             code = e.response["Error"]["Code"]
-            return False,code
+            raise AWSError(code=code)
 
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
-
-    def verify_identity(self)-> tuple[bool,dict | str]:
+    def verify_identity(self)-> dict:
         """
         Creamos cliente de STS para validar credenciales, antes de ejecutar
         metodos que llaman a la API de AWS.
         """
-
         try:
             sts = boto3.client("sts")
             response = sts.get_caller_identity()
-            return True,response
+            return response
+        except NoCredentialsError as e:
+            raise CredentialsNotFound("No se encontraron credenciales")
+    
 
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales de AWS"
-
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-            return False, code
-
-    def run_ec2(self,config:dict)-> tuple[bool,str]:
+    def run_ec2(self,config:dict)-> str:
 
         type_machine = config.get("TypeMachine")
         ami_id = config.get("AmiId")
@@ -73,73 +66,61 @@ class ManageEc2:
                 ]
             )
 
-            return True,response.get("Instances")[0].get("InstanceId")
+            return response.get("Instances")[0].get("InstanceId")
 
         except ClientError as e:
             code = e.response["Error"]["Code"]
-            return False,code
+            raise AWSError(code=code)
         
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
-        
-    def init_ec2(self,instance_id:str)-> tuple[bool,str]:
+    def init_ec2(self,instance_id:str)-> str:
 
         try:
-
             self.ec2.start_instances(InstanceIds=[instance_id])
-            return True,instance_id
+            return instance_id
            
         except ClientError  as e:
             code = e.response["Error"]["Code"]
-            return False,code
+            raise AWSError(code)
         
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
 
-    def reboot_ec2(self,instance_id:str)-> tuple[bool,str]:
+    def reboot_ec2(self,instance_id:str)-> str:
 
         try:
             self.ec2.reboot_instances(InstanceIds=[instance_id])
-            return True,instance_id
+            return instance_id
         
         except ClientError as e:
             code = e.response["Error"]["Code"]
-            return False,code
-
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
+            raise AWSError(code=code)
                    
-    def stop_ec2(self,instance_id:str)-> tuple[bool,str]:
+    def stop_ec2(self,instance_id:str)-> str:
 
         try:
             self.ec2.stop_instances(InstanceIds=[instance_id])
-            return True,instance_id
+            return instance_id
         
         except ClientError as e:
             code = e.response["Error"]["Code"]
-            return False,code
+            raise AWSError(code=code)
 
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
-
-    def terminate_ec2(self,instance_id:str)-> tuple[bool,str]:
+    def terminate_ec2(self,instance_id:str)-> str:
 
         try:
             self.ec2.terminate_instances(InstanceIds=[instance_id])
-            return True,instance_id
+            return instance_id
 
         except ClientError as e:
             code = e.response["Error"]["Code"]
-            return False,code
-
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
+            raise AWSError(code=code)
 
     def format_data_ec2(self,response:dict)-> tuple[dict,list]:
 
         list_rows = []
         dict_id_ec2 = {}
 
+        if not response["Reservations"]:
+            raise NoEC2Instances(self.region_name)
+        
         for indice,reservation in enumerate(response["Reservations"],start=1):
 
             for instance in reservation["Instances"]:
@@ -155,14 +136,14 @@ class ManageEc2:
                         nombre = tag.get("Value","Sin Nombre")
                         break
 
-            list_rows.append([str(indice),
-                                   nombre,
-                                   instance.get("InstanceType"),
-                                   instance_state_color,
-                         instance.get("Architecture"),instance.get("InstanceId"),
-                         instance.get("PublicIpAddress","Sin ip publica"),
-                         fecha_formateada
-                         ])
+                list_rows.append([str(indice),
+                                    nombre,
+                                    instance.get("InstanceType"),
+                                    instance_state_color,
+                            instance.get("Architecture"),instance.get("InstanceId"),
+                            instance.get("PublicIpAddress","Sin ip publica"),
+                            fecha_formateada
+                            ])
         return dict_id_ec2,list_rows
       
     def waiter_for_state(self, instance_id: str, target_state: str) -> bool:
@@ -182,10 +163,7 @@ class ManageEc2:
 
         instances_on = 0
         instances_off = 0
-        flag_response,response = self.describe_ec2()
-
-        if not flag_response:
-            return instances_on,instances_off
+        response = self.describe_ec2()
 
         for reservation in response["Reservations"]:
             for instance in reservation["Instances"]:
@@ -195,7 +173,6 @@ class ManageEc2:
                     instances_on += 1
                 elif state in ["stopped","shutting-down"]:
                     instances_off += 1
-
         return instances_on,instances_off
                
 if __name__ == "__main__":

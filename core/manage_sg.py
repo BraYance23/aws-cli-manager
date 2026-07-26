@@ -1,7 +1,8 @@
 import boto3
-from botocore.exceptions import ClientError,NoCredentialsError
+from botocore.exceptions import ClientError
 import logging
 from schemas import DictFormatSGRules
+from exceptions import AWSError,NoEgressRules,NoIngressRules
 
 
 logger = logging.getLogger(__name__)
@@ -13,20 +14,17 @@ class ManageSecurityGroup:
         self.ec2 = boto3.client("ec2",region_name=region_name)
         self.sg_id = None
  
-    def get_rules_sg(self,sg_id:str | None = "")-> tuple[bool,dict | str]:
+    def get_rules_sg(self,sg_id:str | None = "")-> dict:
 
         try:
             response = self.ec2.describe_security_groups(
                 GroupIds=[sg_id]
             )
-            return True,response
+            return response
         
         except ClientError as e:
             code = e.response["Error"]["Code"]
-            return False,code
-
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
+            raise AWSError(code=code)
 
     def formata_data_sg_rules(self,response:dict)-> DictFormatSGRules:
 
@@ -36,9 +34,11 @@ class ManageSecurityGroup:
         dict_rules_egress = {}
 
         for security in response["SecurityGroups"]:
-                
+
             for indice,rule in enumerate(security["IpPermissions"],start=1):
-         
+
+                if not rule["IpRanges"]:
+                    raise NoIngressRules(region=self.region_name,sg_id=self.sg_id)
                 for ip_ranges in rule["IpRanges"]:
 
                     dict_rules_ingress[str(indice)] = {
@@ -57,7 +57,9 @@ class ManageSecurityGroup:
                                     ip_ranges.get("CidrIp","Sin CidrIp"),
                                     ip_ranges.get("Description","Sin descripción")
                                     ])
-                    
+
+            if not  security["IpPermissionsEgress"]:
+                raise NoEgressRules(region=self.region_name,sg_id=self.sg_id)
             for indice,rule_egress in enumerate(security["IpPermissionsEgress"],start=1):
 
                  for ip_ranges_egress in rule_egress["IpRanges"]:
@@ -103,7 +105,7 @@ class ManageSecurityGroup:
         
         return list_rows,dict_sg_id
 
-    def authorize_rule_ingress(self,ip_permissions:dict)-> tuple[bool,dict | str]:
+    def authorize_rule_ingress(self,ip_permissions:dict)-> dict:
 
         
         try:
@@ -111,16 +113,13 @@ class ManageSecurityGroup:
                 GroupId = self.sg_id,
                 IpPermissions = [ip_permissions]
             )
-            return True,ip_permissions
+            return ip_permissions
 
         except ClientError as error:
             code = error.response["Error"]["Code"]
-            return False,code
-
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
+            raise AWSError(code=code)
           
-    def remove_rule_ingress(self,ip_permissions:dict)-> tuple[bool,dict | str]:
+    def remove_rule_ingress(self,ip_permissions:dict)-> dict:
 
         
         try:
@@ -130,33 +129,27 @@ class ManageSecurityGroup:
             self.ec2.revoke_security_group_ingress(
                 GroupId = self.sg_id,
                 IpPermissions = [ip_permissions]
-                        )
-            return True,ip_permissions
+            )
+            return ip_permissions
                      
         except ClientError as error:
             code = error.response['Error']['Code']
-            return False,code
-        
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
+            raise AWSError(code=code)
 
-    def authorize_rule_egress(self,ip_permissions:dict)-> tuple[bool,dict | str]:
+    def authorize_rule_egress(self,ip_permissions:dict)-> dict:
     
         try:
             self.ec2.authorize_security_group_egress(
                 GroupId = self.sg_id,
                 IpPermissions = [ip_permissions]
             )
-            return True,ip_permissions
+            return ip_permissions
 
         except ClientError as error:
             code = error.response["Error"]["Code"]
-            return False,code
+            raise AWSError(code=code)  
 
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
-            
-    def remove_rule_egress(self,ip_permissions:dict)-> tuple[bool,dict | str]:
+    def remove_rule_egress(self,ip_permissions:dict)-> dict:
 
         try:
             for valor in ip_permissions["IpRanges"]:
@@ -166,22 +159,16 @@ class ManageSecurityGroup:
                 GroupId = self.sg_id,
                 IpPermissions = [ip_permissions]
                         )
-            return True,ip_permissions
+            return ip_permissions
                         
         except ClientError as error:
             code = error.response['Error']['Code']
-            return False,code
-        
-        except NoCredentialsError:
-            return False,"No se encontraron credenciales"
+            raise AWSError(code=code)
     
-    def summary_sg(self):
+    def summary_sg(self)-> int:
 
         sg_total = 0
-        flag_response,response = self.get_rules_sg()
-        if not flag_response:
-            return sg_total
-
+        response = self.get_rules_sg()
         list_sg = response["SecurityGroups"]
         return len(list_sg)
             

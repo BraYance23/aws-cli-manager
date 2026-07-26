@@ -9,7 +9,7 @@ from core.manage_ec2 import ManageEc2
 from controllers import menu_services
 from ui.messages import print_message,handle_aws_error
 from ui.tables import select_region_name
-
+from exceptions import CredentialsError,CredentialsNotFound,UserCancelOperation
 
 logging_config.setup_logging()
 logger = logging.getLogger(__name__)
@@ -38,17 +38,19 @@ def main():
             print_message(message="\nValidando credenciales...\nConetando con AWS...",style_message="green italic")
             time.sleep(1)
 
-            flag,code = manager_root.ec2.verify_identity()
-            if not flag:
-                handle_aws_error(code)
-                return
-            
-            account_data = (code["Account"],code["Arn"],location_name,region_name)
+            response = manager_root.ec2.verify_identity()
+            account_data = (response["Account"],response["Arn"],location_name,region_name)
             print_message("Conexion exitosa :D\n\n",style_message="bold bright_white")
-            
             exit_program = menu_services.root_menu(account_data=account_data,manager_root=manager_root)
+
             if exit_program:
-                return       
+                return 
+    except UserCancelOperation:
+        print_message(message="Selección de regiones cancelada",style_message="yellow italic")
+    except CredentialsNotFound as e:
+        handle_aws_error(e.code)      
+    except CredentialsError as e:
+        handle_aws_error(e.code)
     except KeyboardInterrupt:
         return
                                           
