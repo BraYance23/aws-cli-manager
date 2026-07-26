@@ -10,7 +10,7 @@ class AplicationException(Exception):
 
 class ResourceNotFound(Exception):
 
-    def __init__(self,region:str="",sg_id:str=""):
+    def __init__(self,region:str="",sg_id:str|None=""):
         self.region = region
         self.sg_id = sg_id
 
