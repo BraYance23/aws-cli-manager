@@ -38,34 +38,10 @@ class ManageEc2:
         except NoCredentialsError as e:
             raise CredentialsNotFound("No se encontraron credenciales")
     
-
     def run_ec2(self,config:dict)-> str:
 
-        type_machine = config.get("TypeMachine")
-        ami_id = config.get("AmiId")
-        name_instance = config.get("NameInstance")
-        key_pair_name = config.get("KeyPairName")
-        sg_id = config.get("SecurityGroupsId")
-        min_count = config.get("MinCount")
-        max_count = config.get("MaxCount")
-
         try:
-
-            response = self.ec2.run_instances(
-                ImageId = ami_id,
-                InstanceType = type_machine,
-                MinCount = min_count,
-                MaxCount = max_count,
-                KeyName = key_pair_name,
-                SecurityGroupIds = [sg_id],
-                TagSpecifications = [
-                    {
-                        "ResourceType": "instance",
-                        "Tags": [{"Key": "Name", "Value": name_instance}]
-                    }
-                ]
-            )
-
+            response = self.ec2.run_instances(**config)
             return response.get("Instances")[0].get("InstanceId")
 
         except ClientError as e:
@@ -80,9 +56,8 @@ class ManageEc2:
            
         except ClientError  as e:
             code = e.response["Error"]["Code"]
-            raise AWSError(code)
-        
-
+            raise AWSError(code)   
+           
     def reboot_ec2(self,instance_id:str)-> str:
 
         try:
