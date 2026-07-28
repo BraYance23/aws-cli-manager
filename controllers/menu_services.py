@@ -55,13 +55,13 @@ def sg_menu(manager_root):
                     sg_controller.show_rules_sg(direction="egress")
                     input(center_text("Presione enter para continuar"))    
                 case "3":
-                    sg_controller.autorize_sg_ingress(direction = "ingress")
+                    sg_controller.authorize_sg_rule(direction = "ingress")
                 case "4":
-                    sg_controller.autorize_sg_egress(direction = "egress")
+                    sg_controller.authorize_sg_rule(direction = "egress")
                 case "5":
-                    sg_controller.revoke_sg_ingress(direction = "ingress")
+                    sg_controller.revoke_sg_rule(direction = "ingress")
                 case "6":
-                    sg_controller.revoke_sg_egress(direction = "egress")
+                    sg_controller.revoke_sg_rule(direction = "egress")
                 case "7":
                     sg_controller.change_sg_id()
                 case "8":
