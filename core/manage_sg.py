@@ -2,7 +2,7 @@ import boto3
 from botocore.exceptions import ClientError
 import logging
 from schemas import DictFormatSGRules
-from exceptions import AWSError,NoEgressRules,NoIngressRules
+from exceptions import AWSError
 
 
 logger = logging.getLogger(__name__)
@@ -26,68 +26,51 @@ class ManageSecurityGroup:
             code = e.response["Error"]["Code"]
             raise AWSError(code=code)
 
-    def formata_data_sg_rules(self,response:dict)-> DictFormatSGRules:
+    def _parser_rules(self,ip_permissions:list)-> tuple[list,dict]:
 
-        list_rows_ingress = []
-        list_rows_egress = []
-        dict_rules_ingress = {}
-        dict_rules_egress = {}
+        list_rows = []
+        dict_rules = {}
+        indice = 1
+
+        for rule in ip_permissions:
+            for ip_ranges in rule["IpRanges"]:
+                        
+                list_rows.append([str(indice),
+                                rule.get("IpProtocol","Sin protocolo").upper(),
+                                str(rule.get("FromPort","ALL")),
+                                str(rule.get("ToPort","ALL")),
+                                ip_ranges.get("CidrIp","Sin CidrIp"),
+                                ip_ranges.get("Description","Sin descripción")
+                                ])
+                
+                dict_rules[str(indice)] = {
+                    "IpProtocol":rule.get("IpProtocol","N/A."),
+                    "FromPort": rule.get("FromPort",-1),
+                    "ToPort": rule.get("ToPort",-1),
+                    "IpRanges": [{"CidrIp" : ip_ranges.get("CidrIp","Sin CidrIp."),
+                                    "Description": ip_ranges.get("Description","Sin descipcion.")}]
+                                    }
+                indice += 1
+        return list_rows,dict_rules
+
+    def format_data_sg_rules(self,response:dict)-> DictFormatSGRules:
+
+        ip_permissions_ingress = []
+        ip_permissions_egress = []
 
         for security in response["SecurityGroups"]:
 
-            for indice,rule in enumerate(security["IpPermissions"],start=1):
+            ip_permissions_ingress = security["IpPermissions"]
+            ip_permissions_egress = security["IpPermissionsEgress"]
 
-                if not rule["IpRanges"]:
-                    raise NoIngressRules(region=self.region_name,sg_id=self.sg_id)
-                for ip_ranges in rule["IpRanges"]:
-
-                    dict_rules_ingress[str(indice)] = {
-
-                        "IpProtocol":rule.get("IpProtocol","N/A."),
-                        "FromPort": rule.get("FromPort",-1),
-                        "ToPort": rule.get("ToPort",-1),
-                        "IpRanges": [{"CidrIp" : ip_ranges.get("CidrIp","Sin CidrIp."),
-                                    "Description": ip_ranges.get("Description","Sin descipcion.")}]
-                                    }
-                            
-                    list_rows_ingress.append([str(indice),
-                                    rule.get("IpProtocol","Sin protocolo").upper(),
-                                    str(rule.get("FromPort","ALL")),
-                                    str(rule.get("ToPort","ALL")),
-                                    ip_ranges.get("CidrIp","Sin CidrIp"),
-                                    ip_ranges.get("Description","Sin descripción")
-                                    ])
-
-            if not  security["IpPermissionsEgress"]:
-                raise NoEgressRules(region=self.region_name,sg_id=self.sg_id)
-            for indice,rule_egress in enumerate(security["IpPermissionsEgress"],start=1):
-
-                 for ip_ranges_egress in rule_egress["IpRanges"]:
-
-                        dict_rules_egress[str(indice)] = {
-
-                            "IpProtocol":rule_egress.get("IpProtocol","N/A."),
-                            "FromPort": rule_egress.get("FromPort","ALL"),
-                            "ToPort": rule_egress.get("ToPort","ALL"),
-                            "IpRanges": [{"CidrIp" : ip_ranges_egress.get("CidrIp","Sin CidrIp."),
-                                        "Description": ip_ranges_egress.get("Description","Sin descipcion.")}]
-                                        }
-                        
-                        list_rows_egress.append([str(indice),
-                                        rule_egress.get("IpProtocol","Sin protocolo").upper(),
-                                        str(rule_egress.get("FromPort","ALL")),
-                                        str(rule_egress.get("ToPort","ALL")),
-                                        ip_ranges_egress.get("CidrIp","Sin CidrIp"),
-                                        ip_ranges_egress.get("Description","Sin descripción")
-                                        ])
-
-
+        list_rows_ingress,dict_rules_ingress = self._parser_rules(ip_permissions_ingress)
+        list_rows_egress,dict_rules_egress = self._parser_rules(ip_permissions_egress)
         return {
             "list_rows_ingress": list_rows_ingress,
-            "list_rows_egress": list_rows_egress,
             "dict_rules_ingress": dict_rules_ingress,
+            "list_rows_egress": list_rows_egress,
             "dict_rules_egress": dict_rules_egress
-            }
+        }
 
     def format_data_sg_general(self,response:dict)-> tuple[list,dict]:
 
@@ -119,7 +102,7 @@ class ManageSecurityGroup:
             code = error.response["Error"]["Code"]
             raise AWSError(code=code)
           
-    def remove_rule_ingress(self,ip_permissions:dict)-> dict:
+    def revoke_rule_ingress(self,ip_permissions:dict)-> dict:
 
         
         try:
@@ -149,7 +132,7 @@ class ManageSecurityGroup:
             code = error.response["Error"]["Code"]
             raise AWSError(code=code)  
 
-    def remove_rule_egress(self,ip_permissions:dict)-> dict:
+    def revoke_rule_egress(self,ip_permissions:dict)-> dict:
 
         try:
             for valor in ip_permissions["IpRanges"]:
