@@ -142,7 +142,7 @@ def build_panel_rules_sg(data:dict):
         Align.center(panel)
     )
 
-def build_panel_deploy_ec2(data: dict):
+def build_panel_deploy_ec2(data: dict,name_instance:str):
 
     table = Table(
         show_header=False,
@@ -165,27 +165,27 @@ def build_panel_deploy_ec2(data: dict):
 
     table.add_row(
         "Tipo de máquina",
-        f"[dim magenta]{data['TypeMachine']}[/dim magenta]"
+        f"[dim magenta]{data['InstanceType']}[/dim magenta]"
     )
 
     table.add_row(
         "AMI ID",
-        f"[dim magenta]{data['AmiId']}[/dim magenta]"
+        f"[dim magenta]{data['ImageId']}[/dim magenta]"
     )
 
     table.add_row(
         "Nombre de instancia",
-        f"[dim magenta]{data['NameInstance']}[/dim magenta]"
+        f"[dim magenta]{name_instance}[/dim magenta]"
     )
 
     table.add_row(
         "Llave SSH",
-        f"[dim magenta]{data['KeyPairName']}[/dim magenta]"
+        f"[dim magenta]{data['KeyName']}[/dim magenta]"
     )
 
     table.add_row(
         "Grupo de seguridad",
-        f"[dim magenta]{data['SecurityGroupsId']}[/dim magenta]"
+        f"[dim magenta]{data['SecurityGroupIds']}[/dim magenta]"
     )
 
     table.add_row(

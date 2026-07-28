@@ -38,8 +38,8 @@ class EC2Controller:
         
         while True:
 
-            config_instace = build_instance_config(manager_root=self.manager_root)
-            prompt_general.build_panel_deploy_ec2(data=config_instace)
+            name_instance,config_instace = build_instance_config(manager_root=self.manager_root)
+            prompt_general.build_panel_deploy_ec2(data=config_instace,name_instance=name_instance)
             confirmation = prompt_general.confirmation_config(data=config_instace)
             match confirmation:
                  case "confirm":

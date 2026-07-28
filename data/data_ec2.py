@@ -209,11 +209,7 @@ main_key_pair = {"1": "Listar llaves SSH",
                  "4": "Volver al menu principal"}
 
 
-"""
-Dict de errores AWS
-"""
-
-AWS_ERROR_MESSAGES: dict[str, str] = {
+AWS_ERROR_MESSAGES: dict[str, str] = {""
     # Errores de instancias
     "InvalidInstanceID.NotFound":       "Error: La instancia especificada no existe",
     "InvalidInstanceID.Malformed":      "El ID de la instancia tiene formato inválido",
