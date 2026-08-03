@@ -35,6 +35,10 @@ class ManageEc2:
             sts = boto3.client("sts")
             response = sts.get_caller_identity()
             return response
+        
+        except ClientError as e:
+            code = e.response["Error"]["Code"]
+            raise AWSError(code=code)
         except NoCredentialsError as e:
             raise CredentialsNotFound("No se encontraron credenciales")
     
@@ -42,7 +46,7 @@ class ManageEc2:
 
         try:
             response = self.ec2.run_instances(**config)
-            return response.get("Instances")[0].get("InstanceId")
+            return [i["InstanceId"] for i in response["Instances"]]
 
         except ClientError as e:
             code = e.response["Error"]["Code"]
@@ -92,19 +96,22 @@ class ManageEc2:
 
         list_rows = []
         dict_id_ec2 = {}
+        indice = 0
 
         if not response["Reservations"]:
             raise NoEC2Instances(self.region_name)
         
-        for indice,reservation in enumerate(response["Reservations"],start=1):
+        for reservation in response["Reservations"]:
 
             for instance in reservation["Instances"]:
-                dict_id_ec2[str(indice)] = (instance.get("InstanceId"))
+                indice += 1
                 fecha = instance.get("LaunchTime")
                 fecha_formateada = fecha.strftime("%Y/%m/%d %H:%M:%S")
                 instance_state = instance["State"].get("Name")
                 instance_state_color = colors_state.get(instance_state,instance_state)
                 nombre = "Sin nombre"
+                dict_id_ec2[str(indice)] = {"instance_id":instance.get("InstanceId"),
+                                            "instance_state": instance_state}
              
                 for tag in instance.get("Tags",[]):
                     if tag.get("Key") == "Name":
@@ -121,17 +128,17 @@ class ManageEc2:
                             ])
         return dict_id_ec2,list_rows
       
-    def waiter_for_state(self, instance_id: str, target_state: str) -> bool:
+    def waiter_for_state(self, list_instance_ids: str, target_state: str) -> bool:
 
         try:
             if target_state == "status_ok":
                 time.sleep(12)
 
             waiter = self.ec2.get_waiter(f"instance_{target_state}")
-            waiter.wait(InstanceIds=[instance_id])
+            waiter.wait(InstanceIds=list_instance_ids)
             return True
         except WaiterError as e:
-            logger.error(f"Waiter falló para {instance_id} -> {target_state}: {e}")
+            logger.error(f"Waiter falló para {list_instance_ids} -> {target_state}: {e}")
             return False
     
     def summary_ec2(self):
@@ -146,7 +153,7 @@ class ManageEc2:
                 state = instance["State"].get("Name")
                 if state == "running":
                     instances_on += 1
-                elif state in ["stopped","shutting-down"]:
+                elif state  == "stopped":
                     instances_off += 1
         return instances_on,instances_off
                

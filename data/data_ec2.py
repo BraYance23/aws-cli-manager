@@ -111,7 +111,7 @@ TYPES_INSTANCES = [
     ["15", "c5a.24xlarge", "96", "192 GB", "$3.696", "~$2,661.12", ""]
 ]
 
-pameter_operation_ec2 = {
+parameter_operation_ec2 = {
     "3": ("📟 -Iniciando instancia","running","✅-Instancia iniciada correctamente."),
     "4": ("🔁 -Reiniciando instancia","status_ok","✅-Instancia reiniciada correctamente."),
     "5": ("🛑 -Deteniendo instancia","stopped","✅-Instancia detenenida correctamente."),
@@ -140,6 +140,36 @@ dict_type_instances = {sub[0]:sub[1] for sub in TYPES_INSTANCES}
 
 dict_os_general = {sub[0]:sub[1] for sub in OS_AVALIBLE}
 
+"""
+Permisos para operaciones de EC2
+va mapeado igual que la tabla de despacho que esta en
+ec2_controller.py
+
+metodos_ec2 = {
+    "3": self.manager_root.ec2.init_ec2,
+    "4": self.manager_root.ec2.reboot_ec2,
+    "5": self.manager_root.ec2.stop_ec2,
+    "6": self.manager_root.ec2.terminate_ec2
+    }
+"""
+permissions_ec2 = {
+    "3": {
+        "permissions" :["stopped"],
+          "message": "No se puede iniciar la instancia en el estado actual | estado de la instancia : "
+          },
+    "4":{
+        "permissions":["running"],
+        "message": "No se puede reiniciar la instancia en el estado actual | estado de la instancia : "
+        },
+    "5": {
+        "permissions":["running"],
+        "message": "No se puede detener la instancia en el estado actual | estado de la instancia : "
+        },
+    "6":{
+        "permissions":["running","stopped"],
+        "message":  "No se puede terminar la instancia en el estado actual | estado de la instancia : "
+        }
+    }
 
 """
 Encabezados y titulos para rich
@@ -208,7 +238,9 @@ main_key_pair = {"1": "Listar llaves SSH",
                  "3": "Eliminar llave SSH",
                  "4": "Volver al menu principal"}
 
-
+"""
+Manejo de errores centraliazado
+"""
 AWS_ERROR_MESSAGES: dict[str, str] = {""
     # Errores de instancias
     "InvalidInstanceID.NotFound":       "Error: La instancia especificada no existe",
