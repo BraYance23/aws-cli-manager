@@ -1,4 +1,4 @@
-# Manage AWS
+# aws-cli-manager
 
 CLI interactiva para administrar recursos de AWS desde la terminal.  
 Permite gestionar instancias EC2, Security Groups y Key Pairs sin salir de la consola, con una interfaz visual construida con [Rich](https://github.com/Textualize/rich).
