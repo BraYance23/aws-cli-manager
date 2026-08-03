@@ -9,7 +9,7 @@ from data.data_ec2 import AWS_ERROR_MESSAGES
 
 console = Console()
 
-def print_message(message,style_message:str=""):
+def print_message(message:str,style_message:str=""):
 
     console.print(message,style=style_message,justify="center")
 

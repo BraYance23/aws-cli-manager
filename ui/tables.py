@@ -89,10 +89,6 @@ def select_region_name():
     rich_rows,dict_region_name = formate_region_name()
     print_regions(title_regions="Regiones disponibles para administrar",rows=rich_rows)
     region_name = choice_options_table(dict_data=dict_region_name,context="de la region que desea administrar ")
-
-    if region_name == "cancel":
-        return "cancel","cancel"
-    
     location_name = AWS_REGIONS[region_name]
     return region_name,location_name
 

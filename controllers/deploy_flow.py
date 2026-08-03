@@ -3,7 +3,7 @@ from controllers.kp_controller import KPController
 from controllers.sg_controller import SGController
 from ui.prompt_general import request_data_config_ec2
 
-def build_instance_config(manager_root) -> dict:
+def build_instance_config(manager_root) -> tuple[str,dict]:
 
     ami_controller = AmiController(manager_root=manager_root)
     kp_controller = KPController(manager_root=manager_root)

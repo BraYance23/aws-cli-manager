@@ -22,7 +22,7 @@ def ec2_menu(manager_root):
 
             match choice_ec2: 
                 case "1":
-                    ec2_controller.show_instances()
+                    ec2_controller.show_instaces()
                     input(center_text("Presione enter para continuar"))
                 case "2":
                     ec2_controller.run_ec2()
@@ -30,6 +30,8 @@ def ec2_menu(manager_root):
                     ec2_controller.operation_ec2(choice_ec2)
                 case "7":
                     break
+        except exceptions.InvalidOperation_EC2 as e:
+            print_message(str(e),style_message="yellow italic")
         except exceptions.NoEC2Instances as e:
             print_message(f"No hay instancias en la region : {e.region}",style_message="yellow italic")
         except exceptions.UserCancelOperation:
@@ -43,7 +45,7 @@ def sg_menu(manager_root):
     while True:
 
         try:
-            menus.print_menu_sg(sg_id=manager_root.sg.sg_id)
+            menus.print_menu_sg(sg_id=manager_root.sg.sg_id,region_name=manager_root.region_name)
             options_sg = data_ec2.main_sg
             choice_operation = choice_options_menu(dict_options=options_sg)
 
@@ -67,9 +69,9 @@ def sg_menu(manager_root):
                 case "8":
                     break
         except exceptions.NoIngressRules as e:
-            print_message(message=f"No hay Reglas de entrada en el grupo de seguridad : {e.sg_id} | Region : {e.region}",style_message="yellow italic")
+            print_message(message = str(e),style_message="yellow italic")
         except exceptions.NoEgressRules as e:
-             print_message(message=f"No hay Reglas de salidad en el grupo de seguridad : {e.sg_id} | Region : {e.region}",style_message="yellow italic")
+             print_message(message = str(e),style_message="yellow italic")
         except exceptions.UserCancelOperation:
             print_message(message="operacion cancelada",style_message="yellow italic")
         except exceptions.AWSError as e:
@@ -100,7 +102,7 @@ def kp_menu(manager_root):
         except (PermissionError,OSError) as e:
             print_message(message=f"Error al intentar guardar la llave SSH,| {e.strerror}",style_message="italic red")
         except exceptions.NoKeyPairs as e:
-            print_message(message=f"No hay llaves SSH en la region : {e.region}",style_message="yellow italic")
+            print_message(message=str(e))
         except exceptions.UserCancelOperation:
             print_message(message="operacion cancelada",style_message="italic yellow")
         except exceptions.AWSError as e:

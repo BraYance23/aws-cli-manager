@@ -20,17 +20,17 @@ def print_menu_kp(region):
     
     panel = Panel(
     Align.center(kp_menu_options),
-    title=f"[bold bright_white]Manager Key Paris[/bold bright_white]",
+    title=f"[bold bright_white]Manager Key Pairs[/bold bright_white]",
     border_style="Yellow",
     padding=(1, 5),
     expand=False,)
 
     console.print(Align.center(panel))
 
-def print_menu_sg(sg_id):
+def print_menu_sg(sg_id:str,region_name:str):
 
     grid = Table(
-        title=f"Operando sobre : [italic]{sg_id}[/italic]\n",
+        title=f"Operando sobre : [italic]{sg_id}[/italic] - Region : [italic]{region_name}[/italic]\n",
         show_header=False,
         show_edge=False,
         box=None,
@@ -157,7 +157,7 @@ def print_root_menu(account_data,summary,update_dashboard=""):
 
     width_container = 110
     title = Text("Bienvenido a Manage AWS",style="bold cyan")
-    subtitle= Text("Datos aosciados a su cuenta de AWS",style="italic gray")
+    subtitle= Text("Datos asociados a su cuenta de AWS",style="italic gray")
 
 
     rows_badge = build_metrics_budges(widht_container_main=width_container,summary_total=summary)

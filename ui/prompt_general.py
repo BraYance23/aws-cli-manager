@@ -79,7 +79,7 @@ def build_panel_rules_sg(data:dict):
 
     ip_protocol = data["IpProtocol"]
     from_port = data["FromPort"]
-    to_port = data["FromPort"]
+    to_port = data["ToPort"]
     for value in data["IpRanges"]:
         cdrip_ip = value["CidrIp"]
         description = value["Description"]
@@ -278,7 +278,7 @@ MinCount = 2  → "pero necesito al menos 2"\n""",style="green",justify="center"
     while True:
 
         min_count = ask_int(prompt="Ingrese el minimo de instancias que desea desplegar : ",msg_max="El maximo de instancias que se puede desplegar es :")
-        max_count = ask_int(prompt="Ingrese el maximo de instancias que desea desplegar : ",msg_max="El maximo de instancias que se puede desplegar es :")
+        max_count = ask_int(prompt="Ingrese el máximo de instancias que desea desplegar : ",msg_max="El maximo de instancias que se puede desplegar es :")
 
         if max_count >= min_count:
             break

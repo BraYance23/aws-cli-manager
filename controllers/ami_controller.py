@@ -29,9 +29,6 @@ class AmiController:
     
     def select_os_version(self,selected_os):
 
-        if not selected_os:
-            return
-        
         header = data_ec2.header_os_version["header"]
         title = data_ec2.header_os_version["title"]
         list_rows,dict_os_version = self.manager_root.ami.formate_data_selected_os(selected_os)
@@ -53,12 +50,6 @@ class AmiController:
     def get_ami_id(self):
 
         selected_os = self.select_os()
-        if selected_os == "cancel":
-            return "cancel"
-
         version_os = self.select_os_version(selected_os)
-        if selected_os == "cancel":
-            return "cancel"
-
         return self.select_ami_id(selected_os,version_os)
        

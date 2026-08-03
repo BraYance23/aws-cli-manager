@@ -43,7 +43,7 @@ class ManageAmi:
             if image["State"] == "available":
                 
                 fecha = image.get("CreationDate")
-                fecha_formateada = str(datetime.strptime(fecha,"%Y-%m-%dT%H:%M:%S.%fZ"))
+                fecha_formateada = datetime.fromisoformat(fecha[:19]).strftime("%Y/%m/%d %H:%M:%S")
                     
                 list_rows.append(
                     [str(indice),

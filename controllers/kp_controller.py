@@ -15,9 +15,6 @@ class KPController:
 
         response = self.manager_root.key_pair.request_key_pairs()
         dict_id_key,list_rows = self.manager_root.key_pair.format_data(response)
-        if not list_rows:
-            print_message(f"[yellow italic]No hay llaves SSH en esta region[/yellow italic] : [bold bright_white]{self.manager_root.region_name}[/bold bright_white]")
-            return
         tables.print_table_kp(title="Llaves SSH existentes",list_rows=list_rows)
 
     def select_key_pair(self)-> bool|None|str:
@@ -30,9 +27,6 @@ class KPController:
     def generate_key_pairs(self):
 
         name_key = self.manager_root.key_pair.request_name_key()
-        if not name_key:
-            return
-        
         response_generate_key = self.manager_root.key_pair.generate_key_pair(name_key)
         response_save_key = self.manager_root.key_pair.save_key_pair(response_generate_key,name_key)
         print_message(f"💾-Llave guardada con exito en : {response_save_key}",style_message="green italic")

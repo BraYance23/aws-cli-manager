@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Callable
 from ui.messages import print_message
 from ui import prompt_general
 from ui import tables
@@ -86,7 +87,7 @@ class SGController:
         selected_rule = prompt_general.choice_options_table(dict_data=dict_rules,context="de la regla de seguridad que desea eliminar ")
         return selected_rule
 
-    def _revoke_sg_rule(self,direction:str,revoke_fun:callable,action_name:str):
+    def _revoke_sg_rule(self,direction:str,revoke_fun:Callable,action_name:str):
 
         selected_rule = self._get_rule_revoke(direction=direction)
         prompt_general.confirmation() 
