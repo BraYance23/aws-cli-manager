@@ -3,6 +3,7 @@ from botocore.exceptions import ClientError
 import logging
 from schemas import DictFormatSGRules
 from exceptions import AWSError
+import json
 
 
 logger = logging.getLogger(__name__)
@@ -13,15 +14,30 @@ class ManageSecurityGroup:
         self.region_name = region_name
         self.ec2 = boto3.client("ec2",region_name=region_name)
         self.sg_id = None
- 
-    def get_rules_sg(self,sg_id:str | None = "")-> dict:
+
+
+    def get_sg_rules(self,sg_id):
 
         try:
-            response = self.ec2.describe_security_groups(
-                GroupIds=[sg_id]
+            response = self.ec2.describe_security_group_rules(
+                Filters=[
+                    {
+                        "Name": "group-id",
+                        "Values": [sg_id]
+                    }
+                ]
             )
             return response
         
+        except ClientError as e:
+            code = e.response["Error"]["Code"]
+            raise AWSError(code=code)
+
+    def get_sg_general(self)-> dict:
+
+        try:
+            response = self.ec2.describe_security_groups()
+            return response
         except ClientError as e:
             code = e.response["Error"]["Code"]
             raise AWSError(code=code)
@@ -30,38 +46,32 @@ class ManageSecurityGroup:
 
         list_rows = []
         dict_rules = {}
-        indice = 1
 
-        for rule in ip_permissions:
-            for ip_ranges in rule["IpRanges"]:
-                        
-                list_rows.append([str(indice),
-                                rule.get("IpProtocol","Sin protocolo").upper(),
-                                str(rule.get("FromPort","ALL")),
-                                str(rule.get("ToPort","ALL")),
-                                ip_ranges.get("CidrIp","Sin CidrIp"),
-                                ip_ranges.get("Description","Sin descripción")
-                                ])
-                
-                dict_rules[str(indice)] = {
-                    "IpProtocol":rule.get("IpProtocol","N/A."),
-                    "FromPort": rule.get("FromPort",-1),
-                    "ToPort": rule.get("ToPort",-1),
-                    "IpRanges": [{"CidrIp" : ip_ranges.get("CidrIp","Sin CidrIp."),
-                                    "Description": ip_ranges.get("Description","Sin descipcion.")}]
-                                    }
-                indice += 1
+        for indice,rule in enumerate(ip_permissions,start=1):
+            list_rows.append([str(indice),
+                              rule.get("IpProtocol","Sin protocolo").upper(),
+                              str(rule.get("FromPort","ALL")),
+                              str(rule.get("ToPort","ALL")),
+                              rule.get("CidrIpv4","Sin CidrIp"),
+                              rule.get("Description","Sin descripción")
+                              ]
+                            )
+            dict_rules[str(indice)] = rule["SecurityGroupRuleId"]
         return list_rows,dict_rules
+
+
 
     def format_data_sg_rules(self,response:dict)-> DictFormatSGRules:
 
         ip_permissions_ingress = []
         ip_permissions_egress = []
 
-        for security in response["SecurityGroups"]:
+        for rule in response["SecurityGroupRules"]:
 
-            ip_permissions_ingress = security["IpPermissions"]
-            ip_permissions_egress = security["IpPermissionsEgress"]
+            if rule["IsEgress"]:
+                ip_permissions_egress.append(rule)
+            else:
+                ip_permissions_ingress.append(rule)
 
         list_rows_ingress,dict_rules_ingress = self._parser_rules(ip_permissions_ingress)
         list_rows_egress,dict_rules_egress = self._parser_rules(ip_permissions_egress)
@@ -71,6 +81,8 @@ class ManageSecurityGroup:
             "list_rows_egress": list_rows_egress,
             "dict_rules_egress": dict_rules_egress
         }
+    
+
 
     def format_data_sg_general(self,response:dict)-> tuple[list,dict]:
 
@@ -96,25 +108,21 @@ class ManageSecurityGroup:
                 GroupId = self.sg_id,
                 IpPermissions = [ip_permissions]
             )
-            return ip_permissions
+            return True
 
         except ClientError as error:
             code = error.response["Error"]["Code"]
             raise AWSError(code=code)
           
-    def revoke_rule_ingress(self,ip_permissions:dict)-> dict:
+    def revoke_rule_ingress(self,sg_rule_id:dict)-> dict:
 
-        
-        try:
-            for valor in ip_permissions["IpRanges"]:
-                del valor["Description"]        
-                
-            self.ec2.revoke_security_group_ingress(
+        try:        
+            response = self.ec2.revoke_security_group_ingress(
                 GroupId = self.sg_id,
-                IpPermissions = [ip_permissions]
+                SecurityGroupRuleIds = [sg_rule_id]
             )
-            return ip_permissions
-                     
+            return response["RevokedSecurityGroupRules"][0]
+                        
         except ClientError as error:
             code = error.response['Error']['Code']
             raise AWSError(code=code)
@@ -126,23 +134,20 @@ class ManageSecurityGroup:
                 GroupId = self.sg_id,
                 IpPermissions = [ip_permissions]
             )
-            return ip_permissions
+            return True
 
         except ClientError as error:
             code = error.response["Error"]["Code"]
             raise AWSError(code=code)  
 
-    def revoke_rule_egress(self,ip_permissions:dict)-> dict:
+    def revoke_rule_egress(self,sg_rule_id:dict)-> dict:
 
-        try:
-            for valor in ip_permissions["IpRanges"]:
-                del valor["Description"]        
-                
-            self.ec2.revoke_security_group_egress(
+        try:               
+            response = self.ec2.revoke_security_group_egress(
                 GroupId = self.sg_id,
-                IpPermissions = [ip_permissions]
-                        )
-            return ip_permissions
+                SecurityGroupRuleIds = [sg_rule_id]
+            )
+            return response["RevokedSecurityGroupRules"][0]
                         
         except ClientError as error:
             code = error.response['Error']['Code']
@@ -151,7 +156,7 @@ class ManageSecurityGroup:
     def summary_sg(self)-> int:
 
         sg_total = 0
-        response = self.get_rules_sg()
+        response = self.get_sg_general()
         list_sg = response["SecurityGroups"]
         return len(list_sg)
             

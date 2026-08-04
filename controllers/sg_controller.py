@@ -17,14 +17,14 @@ class SGController:
 
     def inject_sg_id(self):
 
-        response = self.manager_root.sg.get_rules_sg()
+        response = self.manager_root.sg.get_sg_general()
         rich_rows,dict_sg_id = self.manager_root.sg.format_data_sg_general(response)
         tables.print_table_sg(title="Security Groups Existentes",list_rows=rich_rows)
         return prompt_general.choice_options_table(dict_data=dict_sg_id,context="del grupo de seguridad que desea administrar")
             
     def show_rules_sg(self,direction:str):
 
-        response = self.manager_root.sg.get_rules_sg(self.manager_root.sg.sg_id)
+        response = self.manager_root.sg.get_sg_rules(self.manager_root.sg.sg_id)
         data_sg = self.manager_root.sg.format_data_sg_rules(response)
         list_rows_ingress = data_sg["list_rows_ingress"]
         list_rows_egress = data_sg["list_rows_egress"]
@@ -80,7 +80,7 @@ class SGController:
 
     def _get_rule_revoke(self,direction:str)-> str:
 
-        response = self.manager_root.sg.get_rules_sg(self.manager_root.sg.sg_id)
+        response = self.manager_root.sg.get_sg_rules(self.manager_root.sg.sg_id)
         data_sg  = self.manager_root.sg.format_data_sg_rules(response)
         dict_rules = data_sg.get(f"dict_rules_{direction}")
         self.show_rules_sg(direction)
@@ -94,7 +94,7 @@ class SGController:
         response = revoke_fun(selected_rule)
         format_ip_permissions = json.dumps(selected_rule,indent=2,default=str)
         logger.info(f"{action_name} en SG ID : {self.manager_root.sg.sg_id}\nRegla : {format_ip_permissions}")
-        print_message(message=f"Puerto : {response['ToPort']} eliminado con exito de : {self.manager_root.sg.sg_id}",style_message="green italic")
+        print_message(message=f"Regla con protocolo : {response["IpProtocol"]} - Puerto : {response['ToPort']} eliminado con exito de SG ID: {self.manager_root.sg.sg_id}",style_message="green italic")
 
     def revoke_sg_rule(self,direction):
 
