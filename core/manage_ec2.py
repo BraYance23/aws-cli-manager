@@ -1,8 +1,7 @@
-import logging
 import  time
-import boto3
-from botocore.exceptions import ClientError,NoCredentialsError,WaiterError
-from exceptions import AWSError,CredentialsNotFound,NoEC2Instances
+import logging
+from botocore.exceptions import ClientError,NoCredentialsError,WaiterError,PartialCredentialsError,ProfileNotFound
+from exceptions import AWSError,NoEC2Instances,CredentialsError
 from data.data_ec2 import colors_state
 
 
@@ -10,20 +9,21 @@ logger = logging.getLogger(__name__)
 
 class ManageEc2:
 
-
-    def __init__(self,region_name = "us-east-1"):
+    def __init__(self,session_root,region_name = "us-east-1"):
+        self.session_root = session_root
         self.region_name = region_name
-        self.ec2 = boto3.client("ec2",region_name = self.region_name)
+        self.client_ec2 = session_root.client("ec2",region_name=region_name)
+        self.client_sts = session_root.client("sts",region_name=region_name)
        
 
     def describe_ec2(self)-> str:
 
         try:
-            response = self.ec2.describe_instances()
+            response = self.client_ec2.describe_instances()
             return response
 
         except ClientError as e:
-            code = e.response["Error"]["Code"]
+            code = e.response["Error"]["Code"] 
             raise AWSError(code=code)
 
     def verify_identity(self)-> dict:
@@ -32,20 +32,26 @@ class ManageEc2:
         metodos que llaman a la API de AWS.
         """
         try:
-            sts = boto3.client("sts")
-            response = sts.get_caller_identity()
+            response = self.client_sts.get_caller_identity()
             return response
+        
+        except NoCredentialsError:
+            raise CredentialsError(code="NoCredentialProviders")
+
+        except PartialCredentialsError:
+            raise CredentialsError(code="PartialCredentialsError")
+
+        except ProfileNotFound:
+            raise CredentialsError(code="ProfileNotFound")
         
         except ClientError as e:
             code = e.response["Error"]["Code"]
             raise AWSError(code=code)
-        except NoCredentialsError as e:
-            raise CredentialsNotFound("No se encontraron credenciales")
     
     def run_ec2(self,config:dict)-> str:
 
         try:
-            response = self.ec2.run_instances(**config)
+            response = self.client_ec2.run_instances(**config)
             return [i["InstanceId"] for i in response["Instances"]]
 
         except ClientError as e:
@@ -55,17 +61,17 @@ class ManageEc2:
     def init_ec2(self,instance_id:str)-> str:
 
         try:
-            self.ec2.start_instances(InstanceIds=[instance_id])
+            self.client_ec2.start_instances(InstanceIds=[instance_id])
             return instance_id
            
         except ClientError  as e:
             code = e.response["Error"]["Code"]
-            raise AWSError(code)   
+            raise AWSError(code=code)   
            
     def reboot_ec2(self,instance_id:str)-> str:
 
         try:
-            self.ec2.reboot_instances(InstanceIds=[instance_id])
+            self.client_ec2.reboot_instances(InstanceIds=[instance_id])
             return instance_id
         
         except ClientError as e:
@@ -75,7 +81,7 @@ class ManageEc2:
     def stop_ec2(self,instance_id:str)-> str:
 
         try:
-            self.ec2.stop_instances(InstanceIds=[instance_id])
+            self.client_ec2.stop_instances(InstanceIds=[instance_id])
             return instance_id
         
         except ClientError as e:
@@ -85,7 +91,7 @@ class ManageEc2:
     def terminate_ec2(self,instance_id:str)-> str:
 
         try:
-            self.ec2.terminate_instances(InstanceIds=[instance_id])
+            self.client_ec2.terminate_instances(InstanceIds=[instance_id])
             return instance_id
 
         except ClientError as e:
@@ -134,7 +140,7 @@ class ManageEc2:
             if target_state == "status_ok":
                 time.sleep(12)
 
-            waiter = self.ec2.get_waiter(f"instance_{target_state}")
+            waiter = self.client_ec2.get_waiter(f"instance_{target_state}")
             waiter.wait(InstanceIds=list_instance_ids)
             return True
         except WaiterError as e:

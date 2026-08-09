@@ -4,7 +4,7 @@ from ui.messages import print_message,spinner
 from controllers.deploy_flow import build_instance_config
 from ui import prompt_general,tables
 from data import data_ec2
-from exceptions import InvalidOperation_EC2
+from exceptions import InvalidOperationEC2
 
 
 
@@ -24,7 +24,7 @@ class EC2Controller:
 
          if instance_state in permissions:
               return 
-         raise InvalidOperation_EC2(message=message,instance_state=instance_state)
+         raise InvalidOperationEC2(message=message,instance_state=instance_state)
          
     def wait_with_spinner(self,msg_init,msg_success,list_instance_id,target_state):
 

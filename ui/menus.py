@@ -120,7 +120,8 @@ def build_menu_panel(width_container_main):
         "[blue][2][/blue] -> Administrar Security Groups\n"
         "[yellow][3][/yellow] -> Administrar Key Pairs\n"
         "[cyan][4][/cyan] -> Cambiar de región\n"
-        "[red][5][/red] -> Salir"
+        "[cyan][5][/cyan] -> Cambiar de perfil\n"
+        "[red][6][/red] -> Salir"
     )
 
     panel_menu = Panel(
@@ -144,7 +145,7 @@ def build_table_account(width_container,account_data):
     )
 
     table_account.add_column("Account ID", justify="center", ratio=2)
-    table_account.add_column("ARN", justify="center", ratio=4)
+    table_account.add_column("Profile IAM", justify="center", ratio=2)
     table_account.add_column("Location Name", justify="center", ratio=2)
     table_account.add_column("Region Name", justify="center", ratio=2)
     table_account.add_row(*account_data)

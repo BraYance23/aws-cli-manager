@@ -1,10 +1,10 @@
+from typing import Literal
 from rich.console import Console
 from rich.prompt import Prompt
 from rich .table import Table
 from rich.panel import Panel
 from rich.align import Align
 from rich import box
-from typing import Literal
 from exceptions import UserCancelOperation
 
 console = Console()
@@ -31,7 +31,6 @@ def choice_options_table(dict_data:dict,context:str)-> str:
         elif choice == "0":
             raise UserCancelOperation()
             
-
         console.print("[yellow italic]\nValor ingresado no esta en el rango valido.[/yellow italic]\n",justify="center")
 
 def choice_options_menu(dict_options:dict)-> str:
@@ -46,7 +45,24 @@ def choice_options_menu(dict_options:dict)-> str:
             console.print("\n[yellow italic]Valor ingresado no esta en el rango valido.[/yellow italic]\n",justify="center")
             continue
         return choice
-    
+
+def choice_profile(dict_options):
+
+    while True:
+
+        selected_profile = Prompt.ask(center_text(text="Ingrese el # del perfil que desea  ('0' para cancelar) ")).strip()
+
+        if selected_profile == "0":
+            raise UserCancelOperation()
+
+        elif selected_profile == "1":
+            return "__env__"
+        
+        elif selected_profile not in dict_options:
+            console.print("Valor ingresado no esta en el rango valido.",style="yellow italic",justify="center")
+            continue
+        return dict_options[selected_profile]
+
 def confirmation_config(data:dict)-> Literal["confirm","retry"]:
  
     while True:
@@ -243,6 +259,15 @@ def request_ip_permissions(public_ip:str)-> dict:
             ]
         }
 
+def request_name_key()-> str:
+
+    while True:
+        name_key = Prompt.ask(center_text("Ingrese el nombre de la llave SSH que desea crear ")).strip()
+
+        if name_key:
+            return name_key
+        console.print("No se puede crear una llave sin nombre",style="yellow italic",justify="center")
+            
 def ask_int(prompt:str,value_min:int = 1,value_max:int = 100,msg_max:str="")-> int:
 
     while True:

@@ -227,7 +227,8 @@ main_root = {"1": "Administrar EC2",
             "2": "Administar Security Groups",
             "3": "Administar Key Pairs",
             "4": "Cambiar de region",
-            "5": "Salir"}
+            "5": "Cambiar de perfil",
+            "6": "Salir"}
 
 main_ec2 = {"1": "Listar instancias",
             "2": "Desplegar instancia",
@@ -292,7 +293,15 @@ AWS_ERROR_MESSAGES: dict[str, str] = {""
     "RequestExpired":                   "La solicitud expiró, verifica la hora del sistema",
 
     # Credenciales
-    "No se encontraron credenciales":   "No se encontraron las credenciales de aws, ejecute en su terminal 'aws configure' para validar credenciales.",
-}
+    "NoCredentialProviders":            "No se encontraron las credenciales de aws, ejecute en su terminal 'aws configure' para validar credenciales.",
+    "InvalidClientTokenId":             "El Access Key ID no existe o fue eliminado",
+    "SignatureDoesNotMatch":            "El Secret Access Key es incorrecto, verifica tus credenciales",
+    "ExpiredTokenException":            "Las credenciales temporales han expirado, renueva el token",
+    "AccessDenied":                     "Credenciales válidas pero sin permisos para realizar esta operación",
 
+    # Errores de credenciales botocore
+    "NoCredentialsError":               "No se encontraron credenciales, ejecuta 'aws configure'",
+    "PartialCredentialsError":          "Credenciales incompletas, falta access_key o secret_key",
+    "ProfileNotFound":                  "El perfil seleccionado no existe en ~/.aws/credentials",
+    }
 

@@ -26,7 +26,7 @@ class KPController:
         
     def generate_key_pairs(self):
 
-        name_key = self.manager_root.key_pair.request_name_key()
+        name_key = prompt_general.request_name_key()
         response_generate_key = self.manager_root.key_pair.generate_key_pair(name_key)
         response_save_key = self.manager_root.key_pair.save_key_pair(response_generate_key,name_key)
         print_message(f"💾-Llave guardada con exito en : {response_save_key}",style_message="green italic")
@@ -37,3 +37,4 @@ class KPController:
         prompt_general.confirmation()
         delete_code = self.manager_root.key_pair.delete_key_pair(key_selected)
         logger.info(f"Se elimino la llave SSH : {key_selected}.pem")
+        print_message(message=f"Llave SSH : '{key_selected}.pem' eliminada con exito.",style_message="green italic")

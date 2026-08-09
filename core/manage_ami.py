@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-import boto3
 from botocore.exceptions import ClientError
 from data import data_ec2
 from exceptions import AWSError
@@ -11,14 +10,15 @@ logger = logging.getLogger(__name__)
 
 class ManageAmi:
   
-    def __init__(self,region_name = "us-east-1"):
+    def __init__(self,session_root,region_name = "us-east-1"):
+        self.session_root = session_root
         self.region_name = region_name
-        self.ec2 = boto3.client("ec2",region_name=self.region_name)
+        self.client_ami = self.session_root.client("ec2",region_name=region_name)
     
     def get_ami_id(self,owner:str,filter:str)-> tuple[bool,dict | str]:
   
         try:
-            response = self.ec2.describe_images(
+            response = self.client_ami.describe_images(
             Owners=[owner],
             Filters=[
                     {"Name": "name", "Values": [filter]},

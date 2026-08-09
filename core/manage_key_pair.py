@@ -1,6 +1,5 @@
-from pathlib import Path
 import logging
-import boto3
+from pathlib import Path
 from botocore.exceptions import ClientError
 from exceptions import AWSError,NoKeyPairs
 
@@ -9,15 +8,16 @@ logger = logging.getLogger(__name__)
 
 class ManageKeyPairs:
 
-    def __init__(self,region_name = "us-east-1"):
+    def __init__(self,session_root,region_name = "us-east-1"):
+        self.session_root = session_root
         self.region_name = region_name
-        self.ec2 = boto3.client("ec2",region_name = self.region_name)
+        self.client_kp = self.session_root.client("ec2",region_name=region_name)
 
 
     def request_key_pairs(self)-> dict:
 
         try:
-            response = self.ec2.describe_key_pairs()
+            response = self.client_kp.describe_key_pairs()
             return response
             
         except ClientError as e:
@@ -51,7 +51,7 @@ class ManageKeyPairs:
     def generate_key_pair(self, key_name:str)-> str:
 
         try:
-            response = self.ec2.create_key_pair(KeyName=key_name)
+            response = self.client_kp.create_key_pair(KeyName=key_name)
             private_key = response["KeyMaterial"]
             return private_key
         
@@ -59,15 +59,6 @@ class ManageKeyPairs:
             code = e.response["Error"]["Code"]
             raise AWSError(code=code)
 
-    def request_name_key(self)-> str:
-
-        while True:
-            name_key = input("Ingre el nombre de la llave que desea crear : ").strip()
-            if name_key:
-                return name_key
-            
-            print("No se puede crear una llave sin nombre")
-            
     def save_key_pair(self,private_key:str,key_name:str)-> Path:
 
         key_path = Path.home()/".ssh"/f"{key_name}.pem"
@@ -80,7 +71,7 @@ class ManageKeyPairs:
     def delete_key_pair(self,key_delete:str)-> str:
 
         try:
-            self.ec2.delete_key_pair(KeyName=key_delete)
+            self.client_kp.delete_key_pair(KeyName=key_delete)
             return key_delete
 
         except ClientError as error:

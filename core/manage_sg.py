@@ -1,25 +1,24 @@
-import boto3
-from botocore.exceptions import ClientError
 import logging
+from botocore.exceptions import ClientError
 from schemas import DictFormatSGRules
-from exceptions import AWSError
-import json
+from exceptions import AWSError,NoSecurityGroups
 
 
 logger = logging.getLogger(__name__)
 
 class ManageSecurityGroup:
     
-    def __init__(self,region_name:str = "us-east-1"):
+    def __init__(self,session_root,region_name:str = "us-east-1"):
+        self.session_root = session_root
         self.region_name = region_name
-        self.ec2 = boto3.client("ec2",region_name=region_name)
+        self.client_sg = session_root.client("ec2",region_name=region_name)
         self.sg_id = None
 
 
     def get_sg_rules(self,sg_id):
 
         try:
-            response = self.ec2.describe_security_group_rules(
+            response = self.client_sg.describe_security_group_rules(
                 Filters=[
                     {
                         "Name": "group-id",
@@ -36,7 +35,7 @@ class ManageSecurityGroup:
     def get_sg_general(self)-> dict:
 
         try:
-            response = self.ec2.describe_security_groups()
+            response = self.client_sg.describe_security_groups()
             return response
         except ClientError as e:
             code = e.response["Error"]["Code"]
@@ -89,6 +88,9 @@ class ManageSecurityGroup:
         dict_sg_id = {}
         list_rows = []
 
+        if not response["SecurityGroups"]:
+            raise NoSecurityGroups(region=self.region_name)
+        
         for indice,valor in enumerate(response["SecurityGroups"],start=1):
 
             list_rows.append([
@@ -104,7 +106,7 @@ class ManageSecurityGroup:
 
         
         try:
-            self.ec2.authorize_security_group_ingress(
+            self.client_sg.authorize_security_group_ingress(
                 GroupId = self.sg_id,
                 IpPermissions = [ip_permissions]
             )
@@ -117,7 +119,7 @@ class ManageSecurityGroup:
     def revoke_rule_ingress(self,sg_rule_id:dict)-> dict:
 
         try:        
-            response = self.ec2.revoke_security_group_ingress(
+            response = self.client_sg.revoke_security_group_ingress(
                 GroupId = self.sg_id,
                 SecurityGroupRuleIds = [sg_rule_id]
             )
@@ -130,7 +132,7 @@ class ManageSecurityGroup:
     def authorize_rule_egress(self,ip_permissions:dict)-> dict:
     
         try:
-            self.ec2.authorize_security_group_egress(
+            self.client_sg.authorize_security_group_egress(
                 GroupId = self.sg_id,
                 IpPermissions = [ip_permissions]
             )
@@ -143,7 +145,7 @@ class ManageSecurityGroup:
     def revoke_rule_egress(self,sg_rule_id:dict)-> dict:
 
         try:               
-            response = self.ec2.revoke_security_group_egress(
+            response = self.client_sg.revoke_security_group_egress(
                 GroupId = self.sg_id,
                 SecurityGroupRuleIds = [sg_rule_id]
             )

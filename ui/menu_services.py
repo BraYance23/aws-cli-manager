@@ -1,4 +1,3 @@
-from typing import Literal
 from controllers.ec2_controller import EC2Controller
 from controllers.sg_controller import SGController
 from controllers.kp_controller import KPController
@@ -34,7 +33,7 @@ def ec2_menu(manager_root):
                         data_ec2.dashboard_dirty["ec2"]["needs_update"] = True
                 case "7":
                     break
-        except exceptions.InvalidOperationEC2 as e:
+        except exceptions.InvalidOperation_EC2 as e:
             print_message(str(e),style_message="yellow italic")
         except exceptions.NoEC2Instances as e:
             print_message(f"No hay instancias en la region : {e.region}",style_message="yellow italic")
@@ -76,12 +75,11 @@ def sg_menu(manager_root):
             print_message(message = str(e),style_message="yellow italic")
         except exceptions.NoEgressRules as e:
              print_message(message = str(e),style_message="yellow italic")
-        except exceptions.NoSecurityGroups as e:
-            print_message(message=str(e),style_message="yellow italic")
         except exceptions.UserCancelOperation:
             print_message(message="operacion cancelada",style_message="yellow italic")
         except exceptions.AWSError as e:
             handle_aws_error(e.code)
+
 
 def kp_menu(manager_root):
 
@@ -115,7 +113,8 @@ def kp_menu(manager_root):
         except exceptions.AWSError as e:
             handle_aws_error(e.code)
 
-def root_menu(account_data,manager_root)-> Literal["change region","change profile","exit program"]:
+
+def root_menu(account_data,manager_root):
 
     while True:
 
@@ -131,30 +130,19 @@ def root_menu(account_data,manager_root)-> Literal["change region","change profi
                     ec2_menu(manager_root)
                 case "2":
                     if not manager_root.sg.sg_id:
-                        select_sg_id(manager_root=manager_root)
+                        if select_sg_id(manager_root=manager_root) == "cancel":
+                            continue
                     sg_menu(manager_root)
 
                 case "3":
                     kp_menu(manager_root)         
                 case "4":
-                    reset_data_dashboard()
-                    return "change region"
+                    break
                 case "5":
-                    reset_data_dashboard()
-                    return "change profile"
-                case "6":
                     print_message(message=":D Hasta pronto...",style_message="green italic")
-                    return "exit program"
+                    return True
         except exceptions.UserCancelOperation:
             print_message(message="Operacion cancelada",style_message="yellow italic")
-
-def reset_data_dashboard():
-
-    services = ["ec2","sg","kp"]
-    for service in services:
-        data_ec2.dashboard_dirty[service]["needs_update"] = True
-        data_ec2.dashboard_dirty[service]["last_summary"] = None
-
 
 def get_summary_all(manager_root):
 

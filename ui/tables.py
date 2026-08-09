@@ -3,7 +3,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich import box
 from rich.align import Align
-from ui.prompt_general import choice_options_table
+from core.aws_profiles import get_profiles
+from ui.prompt_general import choice_options_table,choice_profile
 from data.data_ec2 import AWS_REGIONS
 
 
@@ -67,7 +68,34 @@ def print_regions(title_regions,rows):
 
     console.print(Align.center(panel))
 
-def formate_region_name()-> tuple[list,dict]:
+def print_profiles(list_profile):
+
+    grid = Table(
+        title=False,
+        show_header=False,
+        show_edge=False,
+        box=None,
+        padding=(0,2)
+    )
+
+    grid.add_column("indices")
+    grid.add_column("profiles",justify="center")
+
+    grid.add_row("1","[italic bright_white](.env / variables de entorno)[/italic bright_white]")
+
+    for profile in list_profile:
+        grid.add_row(*profile,style="green italic")
+
+    panel = Panel(
+        Align.center(grid),
+        title="🔐-Perfiles disponibles",
+        border_style="cyan",
+        padding=(1,3),
+        expand=False
+    )
+
+    console.print(Align.center(panel))
+def format_region_name()-> tuple[list,dict]:
 
     rich_rows= []
     dict_region_id = {}
@@ -84,14 +112,35 @@ def formate_region_name()-> tuple[list,dict]:
 
     return rich_rows,dict_region_id
 
+def format_profiles(profiles:list):
+
+    dict_profile = {}
+    list_profile = []
+
+    for indice,profile in enumerate(profiles,start=2):
+        dict_profile[str(indice)] = profile
+        list_profile.append([str(indice),
+                            profile])
+
+    return list_profile,dict_profile
+
 def select_region_name():
      
-    rich_rows,dict_region_name = formate_region_name()
+    rich_rows,dict_region_name = format_region_name()
     print_regions(title_regions="Regiones disponibles para administrar",rows=rich_rows)
     region_name = choice_options_table(dict_data=dict_region_name,context="de la region que desea administrar ")
     location_name = AWS_REGIONS[region_name]
     return region_name,location_name
 
+def select_profile():
+
+    profiles = get_profiles()
+
+    rich_rows,dict_profiles = format_profiles(profiles=profiles)
+    print_profiles(list_profile=rich_rows)
+    selected_profile = choice_profile(dict_options=dict_profiles)
+    return selected_profile
+    
 def print_table_ec2(title:str,list_rows:list):
     
     table = Table(
