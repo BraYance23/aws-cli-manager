@@ -107,3 +107,8 @@ class EC2Controller:
                                 msg_success=f"{msg_finally}",
                                 target_state=target_state,
                                 list_instance_id=response)
+        
+        dashboard_operations = ["3","5","6"]
+        if selection in dashboard_operations:
+             return True
+        return False

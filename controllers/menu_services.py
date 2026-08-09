@@ -26,8 +26,11 @@ def ec2_menu(manager_root):
                     input(center_text("Presione enter para continuar"))
                 case "2":
                     ec2_controller.run_ec2()
+                    data_ec2.dashboard_dirty["ec2"]["needs_update"] = True
                 case "3" | "4" |"5" | "6":
-                    ec2_controller.operation_ec2(choice_ec2)
+                    change_dashboard = ec2_controller.operation_ec2(choice_ec2)
+                    if change_dashboard:
+                        data_ec2.dashboard_dirty["ec2"]["needs_update"] = True
                 case "7":
                     break
         except exceptions.InvalidOperation_EC2 as e:
@@ -95,8 +98,10 @@ def kp_menu(manager_root):
                     input(center_text("Presione enter para continuar"))
                 case "2":
                     kp_controller.generate_key_pairs()
+                    data_ec2.dashboard_dirty["kp"]["needs_update"] = True
                 case "3":
                     kp_controller.delete_key_pairs()
+                    data_ec2.dashboard_dirty["kp"]["needs_update"] = True
                 case "4":
                     break
         except (PermissionError,OSError) as e:
@@ -111,18 +116,12 @@ def kp_menu(manager_root):
 
 def root_menu(account_data,manager_root):
 
-
-    summary_resources = get_summary_all(manager_root)
-    Dashboard_update = False
     while True:
 
         try:
-            if Dashboard_update:
-                menus.print_root_menu(account_data=account_data,summary=summary_resources,update_dashboard="\n[magenta italic]Dashboard actualizado correctamente\n[/magenta italic]")
-                Dashboard_update = False  
-            else:
-                menus.print_root_menu(account_data=account_data,summary=summary_resources)
 
+            summary_resources = get_summary_all(manager_root)
+            menus.print_root_menu(account_data=account_data,summary=summary_resources)
             options_root = data_ec2.main_root
             choice_aws = choice_options_menu(dict_options=options_root)
             match choice_aws:
@@ -136,34 +135,42 @@ def root_menu(account_data,manager_root):
                     sg_menu(manager_root)
 
                 case "3":
-                    kp_menu(manager_root)
+                    kp_menu(manager_root)         
                 case "4":
-                    summary_resources = get_summary_all(manager_root)
-                    Dashboard_update = True
-                    
-                case "5":
                     break
-                case "6":
+                case "5":
                     print_message(message=":D Hasta pronto...",style_message="green italic")
                     return True
         except exceptions.UserCancelOperation:
             print_message(message="Operacion cancelada",style_message="yellow italic")
-        
 
 def get_summary_all(manager_root):
 
     try:
-        instance_on, instance_off = manager_root.ec2.summary_ec2()
+        if data_ec2.dashboard_dirty["ec2"]["needs_update"]:
+            instance_on, instance_off = manager_root.ec2.summary_ec2()
+            data_ec2.dashboard_dirty["ec2"]["needs_update"] = False
+            data_ec2.dashboard_dirty["ec2"]["last_summary"] = (instance_on,instance_off)
+        instance_on,instance_off = data_ec2.dashboard_dirty["ec2"]["last_summary"]
     except exceptions.AWSError:
         instance_on, instance_off = "N/A", "N/A"
 
     try:
-        sg_total = manager_root.sg.summary_sg()
+        if data_ec2.dashboard_dirty["sg"]["needs_update"]:
+            sg_total = manager_root.sg.summary_sg()
+            data_ec2.dashboard_dirty["sg"]["needs_update"] = False
+            data_ec2.dashboard_dirty["sg"]["last_summary"] = sg_total
+        sg_total = data_ec2.dashboard_dirty["sg"]["last_summary"]
     except exceptions.AWSError:
         sg_total = "N/A"
 
     try:
-        key_pairs_total = manager_root.key_pair.summary_key_pairs()
+        if data_ec2.dashboard_dirty["kp"]["needs_update"]:
+            key_pairs_total = manager_root.key_pair.summary_key_pairs()
+            data_ec2.dashboard_dirty["kp"]["needs_update"] = False
+            data_ec2.dashboard_dirty["kp"]["last_summary"] = key_pairs_total
+        key_pairs_total = data_ec2.dashboard_dirty["kp"]["last_summary"]
+
     except exceptions.AWSError:
         key_pairs_total = "N/A"
     return {

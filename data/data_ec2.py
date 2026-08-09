@@ -127,6 +127,21 @@ colors_state = {
     "shutting-down": "[red]● Shutting-Down[/red]",
 }
 
+dashboard_dirty = {
+    "ec2" : {
+        "needs_update": True,
+        "last_summary": None
+    },
+    "sg" : {
+        "needs_update": True,
+        "last_summary": None,
+    },
+    "kp" : {
+        "needs_update": True,
+        "last_summary": None
+    }
+}
+
 OS_AVALIBLE = [
     ["1","Amazon Linux","x86_64"],
     ["2","Ubuntu","x86_64"],
@@ -211,9 +226,8 @@ Control de flujo de servicios y orquestador
 main_root = {"1": "Administrar EC2",
             "2": "Administar Security Groups",
             "3": "Administar Key Pairs",
-            "4": "Actualizar Dashboard",
-            "5": "Cambiar de region",
-            "6": "Salir"}
+            "4": "Cambiar de region",
+            "5": "Salir"}
 
 main_ec2 = {"1": "Listar instancias",
             "2": "Desplegar instancia",

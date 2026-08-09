@@ -89,7 +89,7 @@ def build_metrics_budges(summary_total,widht_container_main):
     width_badge = widht_container_main // 3
 
     badge_ec2 = Panel(
-        Align.center(f"[bold green]EC2:[/bold green] {instance_on} ON / {instance_off} OFF"),
+        Align.center(f"[bold green]EC2:[/bold green] [green]●[/green] {instance_on} Running / [red]●[/red] {instance_off} Stopped"),
         border_style="green",
         width= width_badge,
         padding=(0,0)
@@ -119,9 +119,8 @@ def build_menu_panel(width_container_main):
         "[green][1][/green] -> Administrar EC2\n"
         "[blue][2][/blue] -> Administrar Security Groups\n"
         "[yellow][3][/yellow] -> Administrar Key Pairs\n"
-        "[cyan][4][/cyan] -> Actualizar Dashboard\n"
-        "[cyan][5][/cyan] -> Cambiar de región\n"
-        "[red][6][/red] -> Salir"
+        "[cyan][4][/cyan] -> Cambiar de región\n"
+        "[red][5][/red] -> Salir"
     )
 
     panel_menu = Panel(
@@ -151,7 +150,7 @@ def build_table_account(width_container,account_data):
     table_account.add_row(*account_data)
     return table_account
     
-def print_root_menu(account_data,summary,update_dashboard=""):
+def print_root_menu(account_data,summary):
 
     console.clear()
 
@@ -159,15 +158,13 @@ def print_root_menu(account_data,summary,update_dashboard=""):
     title = Text("Bienvenido a Manage AWS",style="bold cyan")
     subtitle= Text("Datos asociados a su cuenta de AWS",style="italic gray")
 
-
     rows_badge = build_metrics_budges(widht_container_main=width_container,summary_total=summary)
     panel_menu = build_menu_panel(width_container_main=width_container)
     table_account = build_table_account(width_container=width_container,account_data=account_data)
+
     console.print(Align.center(title))
     console.print(Align.center(subtitle))
     console.print(Align.center(table_account))
     console.print(Align.center(rows_badge))
-    if update_dashboard:
-        console.print(Align.center(update_dashboard))
     console.print(Align.center(panel_menu))
     console.print()
