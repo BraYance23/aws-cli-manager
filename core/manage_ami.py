@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from botocore.exceptions import ClientError
+from core.decorators import handles_aws_error
 from data import data_ec2
 from exceptions import AWSError
 
@@ -14,24 +14,19 @@ class ManageAmi:
         self.session_root = session_root
         self.region_name = region_name
         self.client_ami = self.session_root.client("ec2",region_name=region_name)
-    
-    def get_ami_id(self,owner:str,filter:str)-> tuple[bool,dict | str]:
-  
-        try:
-            response = self.client_ami.describe_images(
-            Owners=[owner],
-            Filters=[
-                    {"Name": "name", "Values": [filter]},
-                    {"Name": "state", "Values": ["available"]},
-                    {"Name": "architecture", "Values": ["x86_64"]}
-                ]
-            )
 
-            return response
-        
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-            raise AWSError(code=code)
+    @handles_aws_error
+    def get_ami_id(self,owner:str,filter:str)-> tuple[bool,dict | str]:
+
+        response = self.client_ami.describe_images(
+        Owners=[owner],
+        Filters=[
+                {"Name": "name", "Values": [filter]},
+                {"Name": "state", "Values": ["available"]},
+                {"Name": "architecture", "Values": ["x86_64"]}
+            ]
+        )
+        return response
 
     def prepare_data_ami(self,data_ami:dict)-> tuple[list,dict]:
 
