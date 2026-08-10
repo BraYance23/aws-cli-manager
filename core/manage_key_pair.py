@@ -80,10 +80,11 @@ class ManageKeyPairs:
 
     def summary_key_pairs(self)-> int:
 
-        key_pairs_total = 0
         response = self.request_key_pairs()
-
         list_key_pairs = response["KeyPairs"]
-        return len(list_key_pairs)
+        return {
+            "summary_kp": len(list_key_pairs)
+        }
+    
 if __name__ == "__main__":
     pass

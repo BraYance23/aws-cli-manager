@@ -150,44 +150,29 @@ def root_menu(account_data,manager_root)-> Literal["change region","change profi
 
 def reset_data_dashboard():
 
-    services = ["ec2","sg","kp"]
-    for service in services:
+    for service in data_ec2.dashboard_services:
         data_ec2.dashboard_dirty[service]["needs_update"] = True
         data_ec2.dashboard_dirty[service]["last_summary"] = None
 
 
 def get_summary_all(manager_root):
 
-    try:
-        if data_ec2.dashboard_dirty["ec2"]["needs_update"]:
-            instance_on, instance_off = manager_root.ec2.summary_ec2()
-            data_ec2.dashboard_dirty["ec2"]["needs_update"] = False
-            data_ec2.dashboard_dirty["ec2"]["last_summary"] = (instance_on,instance_off)
-        instance_on,instance_off = data_ec2.dashboard_dirty["ec2"]["last_summary"]
-    except exceptions.AWSError:
-        instance_on, instance_off = "N/A", "N/A"
-
-    try:
-        if data_ec2.dashboard_dirty["sg"]["needs_update"]:
-            sg_total = manager_root.sg.summary_sg()
-            data_ec2.dashboard_dirty["sg"]["needs_update"] = False
-            data_ec2.dashboard_dirty["sg"]["last_summary"] = sg_total
-        sg_total = data_ec2.dashboard_dirty["sg"]["last_summary"]
-    except exceptions.AWSError:
-        sg_total = "N/A"
-
-    try:
-        if data_ec2.dashboard_dirty["kp"]["needs_update"]:
-            key_pairs_total = manager_root.key_pair.summary_key_pairs()
-            data_ec2.dashboard_dirty["kp"]["needs_update"] = False
-            data_ec2.dashboard_dirty["kp"]["last_summary"] = key_pairs_total
-        key_pairs_total = data_ec2.dashboard_dirty["kp"]["last_summary"]
-
-    except exceptions.AWSError:
-        key_pairs_total = "N/A"
-    return {
-        "instance_on": instance_on,
-        "instance_off": instance_off,
-        "sg_total": sg_total,
-        "key_pairs_total": key_pairs_total
+    summary_total = {}
+    services_func = {
+        "ec2": manager_root.ec2.summary_ec2,
+        "sg": manager_root.sg.summary_sg,
+        "kp": manager_root.key_pair.summary_key_pairs
     }
+    for service in data_ec2.dashboard_services:
+        try:
+            if data_ec2.dashboard_dirty[service]["needs_update"]:
+                summary_service = services_func[service]()
+                data_ec2.dashboard_dirty[service]["needs_update"] = False
+                summary_total.update(summary_service)
+                data_ec2.dashboard_dirty[service]["last_summary"] = summary_service[f"summary_{service}"]
+            else:
+                summary_total[f"summary_{service}"] = data_ec2.dashboard_dirty[service]["last_summary"]
+
+        except exceptions.AWSError:
+                summary_total[f"summary_{service}"] = data_ec2.summary_fallback[service]
+    return summary_total

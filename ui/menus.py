@@ -80,10 +80,9 @@ def print_menu_ec2():
 
 def build_metrics_budges(summary_total,widht_container_main):
 
-    instance_on = summary_total["instance_on"]
-    instance_off = summary_total["instance_off"]
-    sg_total = summary_total["sg_total"]
-    key_pairs_total = summary_total["key_pairs_total"]
+    instance_on,instance_off = summary_total["summary_ec2"]
+    sg_total = summary_total["summary_sg"]
+    key_pairs_total = summary_total["summary_kp"]
 
 
     width_badge = widht_container_main // 3

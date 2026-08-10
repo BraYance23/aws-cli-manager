@@ -157,10 +157,11 @@ class ManageSecurityGroup:
     
     def summary_sg(self)-> int:
 
-        sg_total = 0
         response = self.get_sg_general()
         list_sg = response["SecurityGroups"]
-        return len(list_sg)
+        return {
+            "summary_sg": len(list_sg)
+        }
             
 
 if __name__ == "__main__":

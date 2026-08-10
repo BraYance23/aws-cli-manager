@@ -127,6 +127,13 @@ colors_state = {
     "shutting-down": "[red]● Shutting-Down[/red]",
 }
 
+dashboard_services = ["ec2","sg","kp"]
+
+summary_fallback = {
+    "ec2": ("N/A", "N/A"),
+    "sg": "N/A",
+    "kp": "N/A"
+}
 dashboard_dirty = {
     "ec2" : {
         "needs_update": True,

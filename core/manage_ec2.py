@@ -161,7 +161,10 @@ class ManageEc2:
                     instances_on += 1
                 elif state  == "stopped":
                     instances_off += 1
-        return instances_on,instances_off
+        return {
+            "summary_ec2": (instances_on,instances_off)
+        }
+
                
 if __name__ == "__main__":
     pass
