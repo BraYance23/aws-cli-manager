@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
-from botocore.exceptions import ClientError
-from exceptions import AWSError,NoKeyPairs
+from core.decorators import handles_aws_error
+from exceptions import NoKeyPairs
 
 
 logger = logging.getLogger(__name__)
@@ -11,19 +11,15 @@ class ManageKeyPairs:
     def __init__(self,session_root,region_name = "us-east-1"):
         self.session_root = session_root
         self.region_name = region_name
-        self.client_kp = self.session_root.client("ec2",region_name=region_name)
+        self.client_ec2 = self.session_root.client("ec2",region_name=region_name)
 
 
+    @handles_aws_error
     def request_key_pairs(self)-> dict:
 
-        try:
-            response = self.client_kp.describe_key_pairs()
-            return response
-            
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-            raise AWSError(code=code)
-      
+        response = self.client_ec2.describe_key_pairs()
+        return response
+              
     def format_data(self,response:dict)-> tuple[dict,list]:
         
         list_rows = []
@@ -48,16 +44,13 @@ class ManageKeyPairs:
     
         return dict_key_id,list_rows
 
+    @handles_aws_error
     def generate_key_pair(self, key_name:str)-> str:
 
-        try:
-            response = self.client_kp.create_key_pair(KeyName=key_name)
-            private_key = response["KeyMaterial"]
-            return private_key
+        response = self.client_ec2.create_key_pair(KeyName=key_name)
+        private_key = response["KeyMaterial"]
+        return private_key
         
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-            raise AWSError(code=code)
 
     def save_key_pair(self,private_key:str,key_name:str)-> Path:
 
@@ -68,15 +61,11 @@ class ManageKeyPairs:
         return key_path
 
 
+    @handles_aws_error
     def delete_key_pair(self,key_delete:str)-> str:
 
-        try:
-            self.client_kp.delete_key_pair(KeyName=key_delete)
-            return key_delete
-
-        except ClientError as error:
-            code = error.response["Error"]["Code"]
-            raise AWSError(code=code)
+        self.client_ec2.delete_key_pair(KeyName=key_delete)
+        return key_delete
 
     def summary_key_pairs(self)-> dict:
 
