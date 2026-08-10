@@ -2,6 +2,7 @@ import  time
 import logging
 from botocore.exceptions import ClientError,NoCredentialsError,WaiterError,PartialCredentialsError,ProfileNotFound
 from exceptions import AWSError,NoEC2Instances,CredentialsError
+from core.decorators import handles_aws_error
 from data.data_ec2 import colors_state
 
 
@@ -15,16 +16,11 @@ class ManageEc2:
         self.client_ec2 = session_root.client("ec2",region_name=region_name)
         self.client_sts = session_root.client("sts",region_name=region_name)
        
-
+    @handles_aws_error
     def describe_ec2(self)-> str:
 
-        try:
-            response = self.client_ec2.describe_instances()
-            return response
-
-        except ClientError as e:
-            code = e.response["Error"]["Code"] 
-            raise AWSError(code=code)
+        response = self.client_ec2.describe_instances()
+        return response
 
     def verify_identity(self)-> dict:
         """
@@ -47,56 +43,36 @@ class ManageEc2:
         except ClientError as e:
             code = e.response["Error"]["Code"]
             raise AWSError(code=code)
-    
+
+    @handles_aws_error 
     def run_ec2(self,config:dict)-> list[str]:
 
-        try:
-            response = self.client_ec2.run_instances(**config)
-            return [i["InstanceId"] for i in response["Instances"]]
+        response = self.client_ec2.run_instances(**config)
+        return [i["InstanceId"] for i in response["Instances"]]
 
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-            raise AWSError(code=code)
-        
+    @handles_aws_error  
     def init_ec2(self,instance_id:str)-> str:
 
-        try:
             self.client_ec2.start_instances(InstanceIds=[instance_id])
             return instance_id
-           
-        except ClientError  as e:
-            code = e.response["Error"]["Code"]
-            raise AWSError(code=code)   
-           
+
+    @handles_aws_error     
     def reboot_ec2(self,instance_id:str)-> str:
 
-        try:
-            self.client_ec2.reboot_instances(InstanceIds=[instance_id])
-            return instance_id
-        
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-            raise AWSError(code=code)
-                   
+        self.client_ec2.reboot_instances(InstanceIds=[instance_id])
+        return instance_id
+
+    @handles_aws_error   
     def stop_ec2(self,instance_id:str)-> str:
 
-        try:
-            self.client_ec2.stop_instances(InstanceIds=[instance_id])
-            return instance_id
-        
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-            raise AWSError(code=code)
+        self.client_ec2.stop_instances(InstanceIds=[instance_id])
+        return instance_id
 
+    @handles_aws_error
     def terminate_ec2(self,instance_id:str)-> str:
 
-        try:
-            self.client_ec2.terminate_instances(InstanceIds=[instance_id])
-            return instance_id
-
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-            raise AWSError(code=code)
+        self.client_ec2.terminate_instances(InstanceIds=[instance_id])
+        return instance_id
 
     def format_data_ec2(self,response:dict)-> tuple[dict,list]:
 
