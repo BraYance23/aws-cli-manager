@@ -78,7 +78,7 @@ class ManageKeyPairs:
             code = error.response["Error"]["Code"]
             raise AWSError(code=code)
 
-    def summary_key_pairs(self)-> int:
+    def summary_key_pairs(self)-> dict:
 
         response = self.request_key_pairs()
         list_key_pairs = response["KeyPairs"]

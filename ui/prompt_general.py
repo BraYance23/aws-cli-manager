@@ -227,7 +227,7 @@ def build_panel_deploy_ec2(data: dict,name_instance:str):
         Align.center(panel)
     )
 
-def request_ip_permissions(public_ip:str)-> dict:
+def request_ip_permissions(public_ip:str|None)-> dict:
 
     console.print("Por favor asegurarse de que los datos ingresados sean correctos.\n",style="bold bright_white",justify="center")
     protocol = Prompt.ask(center_text(text="Protocolo (tcp/udp/icmp/-1 para todo) ")).strip()

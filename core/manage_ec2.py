@@ -48,7 +48,7 @@ class ManageEc2:
             code = e.response["Error"]["Code"]
             raise AWSError(code=code)
     
-    def run_ec2(self,config:dict)-> str:
+    def run_ec2(self,config:dict)-> list[str]:
 
         try:
             response = self.client_ec2.run_instances(**config)

@@ -63,7 +63,7 @@ class SGController:
         response = autorize_func(ip_permissions)
 
         format_ip_permissions = json.dumps(ip_permissions,default=str,indent=2)
-        print_message(message=f"Puerto: {ip_permissions['FromPort']} abierto con exito en : {self.manager_root.sg.sg_id}",style_message="green italic")
+        print_message(message=f"Puerto: {response['FromPort']} - {response["ToPort"]} abierto con exito en : {self.manager_root.sg.sg_id}",style_message="green italic")
         logger.info(f"{action_name} en SG ID: {self.manager_root.sg.sg_id}\nRegla : {format_ip_permissions}")
         self.show_rules_sg(direction=direction)
 

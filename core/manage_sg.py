@@ -106,11 +106,11 @@ class ManageSecurityGroup:
 
         
         try:
-            self.client_sg.authorize_security_group_ingress(
+            response = self.client_sg.authorize_security_group_ingress(
                 GroupId = self.sg_id,
                 IpPermissions = [ip_permissions]
             )
-            return True
+            return response["SecurityGroupRules"][0]
 
         except ClientError as error:
             code = error.response["Error"]["Code"]
@@ -132,11 +132,11 @@ class ManageSecurityGroup:
     def authorize_rule_egress(self,ip_permissions:dict)-> dict:
     
         try:
-            self.client_sg.authorize_security_group_egress(
+            response = self.client_sg.authorize_security_group_egress(
                 GroupId = self.sg_id,
                 IpPermissions = [ip_permissions]
             )
-            return True
+            return response["SecurityGroupRules"][0]
 
         except ClientError as error:
             code = error.response["Error"]["Code"]
@@ -155,7 +155,7 @@ class ManageSecurityGroup:
             code = error.response['Error']['Code']
             raise AWSError(code=code)
     
-    def summary_sg(self)-> int:
+    def summary_sg(self)-> dict:
 
         response = self.get_sg_general()
         list_sg = response["SecurityGroups"]
