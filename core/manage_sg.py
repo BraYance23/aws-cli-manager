@@ -4,8 +4,6 @@ from schemas import DictFormatSGRules
 from exceptions import NoSecurityGroups
 
 
-logger = logging.getLogger(__name__)
-
 class ManageSecurityGroup:
     
     def __init__(self,session_root,region_name:str = "us-east-1"):
@@ -47,7 +45,18 @@ class ManageSecurityGroup:
                               rule.get("Description","Sin descripción")
                               ]
                             )
-            dict_rules[str(indice)] = rule["SecurityGroupRuleId"]
+            dict_rules[str(indice)] = {
+                "SecurityGroupRuleId": rule["SecurityGroupRuleId"],
+                "IpProtocol": rule["IpProtocol"],
+                "FromPort": str(rule.get("FromPort","ALL")),
+                "ToPort": str(rule.get("ToPort","ALL")),
+                "IpRanges": [
+                    {"CidrIp":rule.get("CidrIpv4","Sin CidrIp"),
+                    "Description":rule.get("Description","Sin descripción")
+                    }
+                ]
+            }
+
         return list_rows,dict_rules
 
     def format_data_sg_rules(self,response:dict)-> DictFormatSGRules:
@@ -134,7 +143,3 @@ class ManageSecurityGroup:
         return {
             "summary_sg": len(list_sg)
         }
-            
-
-if __name__ == "__main__":
-    pass

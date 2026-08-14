@@ -1,11 +1,6 @@
-import logging
 from datetime import datetime
 from core.decorators import handles_aws_error
 from data import data_ec2
-from exceptions import AWSError
-
-
-logger = logging.getLogger(__name__)
 
 
 class ManageAmi:
@@ -67,7 +62,3 @@ class ManageAmi:
             dict_distro[str(indice)] = valor
             
         return list_rows,dict_distro
-    
-
-if __name__ == "__main__":
-    pass

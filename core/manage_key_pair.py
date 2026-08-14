@@ -4,8 +4,6 @@ from core.decorators import handles_aws_error
 from exceptions import NoKeyPairs
 
 
-logger = logging.getLogger(__name__)
-
 class ManageKeyPairs:
 
     def __init__(self,session_root,region_name = "us-east-1"):
@@ -74,6 +72,3 @@ class ManageKeyPairs:
         return {
             "summary_kp": len(list_key_pairs)
         }
-    
-if __name__ == "__main__":
-    pass

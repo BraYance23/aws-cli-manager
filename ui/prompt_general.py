@@ -63,7 +63,7 @@ def choice_profile(dict_options):
             continue
         return dict_options[selected_profile]
 
-def confirmation_config(data:dict)-> Literal["confirm","retry"]:
+def confirmation_config()-> Literal["confirm","retry"]:
  
     while True:
         print("\n")
@@ -79,19 +79,18 @@ def confirmation_config(data:dict)-> Literal["confirm","retry"]:
             return "retry"
         raise UserCancelOperation()
 
-def confirmation()-> bool:
+def confimation_operation_destroy()-> bool:
 
-    while True:
+        while True:
 
-        choice = Prompt.ask(center_text("Esta acción es irreversible, desea continuar S/N ")).strip().upper()
-        if choice == "S":
-            return True
-        elif choice == "N":
-            raise UserCancelOperation()
-        console.print("Valor ingresado no valido, por favor confirmar operacion.")
+            choice = Prompt.ask(center_text("Esta acción es irreversible, desea continuar S/N ")).strip().upper()
+            if choice == "S":
+                return True
+            elif choice == "N":
+                raise UserCancelOperation()
+            console.print("Valor ingresado no valido, por favor confirmar operacion.")
      
-
-def build_panel_rules_sg(data:dict):
+def build_panel_rules_sg(data:dict,context:str):
 
     ip_protocol = data["IpProtocol"]
     from_port = data["FromPort"]
@@ -147,7 +146,7 @@ def build_panel_rules_sg(data:dict):
 
     panel = Panel(
         table,
-        title="[bold white]🌐 Datos de regla a crear[/bold white]",
+        title=f"[bold white]🌐 Datos de reglas a {context}[/bold white]",
         title_align="center",
         border_style="blue",
         box=box.ROUNDED,

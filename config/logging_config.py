@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 def setup_logging() -> None:
@@ -11,9 +12,17 @@ def setup_logging() -> None:
         level=logging.INFO,
         format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
         handlers=[
-            logging.FileHandler(
+            RotatingFileHandler(
                 PATH_LOG,
+                maxBytes=1 * 1024 * 1024,
+                backupCount = 3,
                 encoding="utf-8"
             )
         ]
     )
+
+    logging.getLogger("botocore").setLevel(logging.WARNING)
+    logging.getLogger("boto3").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+

@@ -44,10 +44,10 @@ def main():
                     time.sleep(1)
 
                     response = manager_root.ec2.verify_identity()
-                    arn_list = response["Arn"].split("/")
-                    account_data = (response["Account"],arn_list[1],location_name,region_name)
+                    profile_name = response["Arn"].split("/")[1]
+                    account_data = (response["Account"],profile_name,location_name,region_name)
                     print_message("Conexion exitosa :D\n\n",style_message="bold bright_white")
-
+                    logger.info(f"Sesion iniciada con perfil IAM : {profile_name}")
                 response_program = menu_services.root_menu(account_data=account_data,manager_root=manager_root)
                 match response_program:
                     case "change region":
@@ -67,9 +67,11 @@ def main():
                 print_message(message="\n\nCambio cancelado, volviendo al menu anteior\n",style_message="yellow italic")
   
             except exceptions.CredentialsError as e:
+                logger.critical("No se encontraron los credenciales de AWS")
                 handle_aws_error(code=e.code)
                 return
             except exceptions.AWSError as e:
+                logger.error(f"AWS error al iniciar sesión: {e.code}")
                 handle_aws_error(code=e.code)
                 return
             except KeyboardInterrupt:

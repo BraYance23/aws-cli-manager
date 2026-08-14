@@ -14,7 +14,6 @@ class EC2Controller:
 
     def __init__(self,manager_root):
         self.manager_root = manager_root
-        pass
 
     def _validate_state(self,instance_state,operation):
 
@@ -39,6 +38,7 @@ class EC2Controller:
             hilo_spinner.join()
 
         if not correct_operation:
+                        logger.error(f"Waiter falló para {list_instance_id} -> {target_state}")
                         print_message(f"No se pudo verificar el estado de la instancia, por favor validar su estado  |1-Listar instancias",style_message="red italic")
                         return False
         
@@ -62,7 +62,7 @@ class EC2Controller:
 
         response = self.manager_root.ec2.run_ec2(config_instace)
         self.wait_with_spinner(msg_init=" 🚀-Desplegando instancia...",
-                                msg_success="Instancia desplegada con extio",
+                                msg_success="Instancia desplegada con exito",
                                 target_state="running",
                                 list_instance_id=response)
         

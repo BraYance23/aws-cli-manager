@@ -49,8 +49,8 @@ class SGController:
         ip_public = get_ip_public()
         while True:
             ip_permissions = prompt_general.request_ip_permissions(ip_public)
-            prompt_general.build_panel_rules_sg(data=ip_permissions)
-            confirmation = prompt_general.confirmation_config(data=ip_permissions)   
+            prompt_general.build_panel_rules_sg(data=ip_permissions,context="crear")
+            confirmation = prompt_general.confirmation_config()   
             match confirmation:
                 case "confirm":
                     return ip_permissions
@@ -61,10 +61,8 @@ class SGController:
 
         ip_permissions = self._get_ip_permissions()
         response = autorize_func(ip_permissions)
-
-        format_ip_permissions = json.dumps(ip_permissions,default=str,indent=2)
         print_message(message=f"Puerto: {response['FromPort']} - {response["ToPort"]} abierto con exito en : {self.manager_root.sg.sg_id}",style_message="green italic")
-        logger.info(f"{action_name} en SG ID: {self.manager_root.sg.sg_id}\nRegla : {format_ip_permissions}")
+        logger.info(f"{action_name} en SG ID: {self.manager_root.sg.sg_id} | Rule ID : {response["SecurityGroupRuleId"]}")
         self.show_rules_sg(direction=direction)
 
     def authorize_sg_rule(self,direction):
@@ -90,10 +88,12 @@ class SGController:
     def _revoke_sg_rule(self,direction:str,revoke_fun:Callable,action_name:str):
 
         selected_rule = self._get_rule_revoke(direction=direction)
-        prompt_general.confirmation() 
-        response = revoke_fun(selected_rule)
-        format_ip_permissions = json.dumps(selected_rule,indent=2,default=str)
-        logger.info(f"{action_name} en SG ID : {self.manager_root.sg.sg_id}\nRegla : {format_ip_permissions}")
+        prompt_general.build_panel_rules_sg(data=selected_rule,context="eliminar")
+        prompt_general.confimation_operation_destroy()
+        sg_rule_id = selected_rule["SecurityGroupRuleId"]
+        response = revoke_fun(sg_rule_id)
+
+        logger.info(f"{action_name} en SG ID : {self.manager_root.sg.sg_id} | Rule ID : {sg_rule_id}")
         print_message(message=f"Regla con protocolo : {response["IpProtocol"]} - Puerto : {response['ToPort']} eliminado con exito de SG ID: {self.manager_root.sg.sg_id}",style_message="green italic")
 
     def revoke_sg_rule(self,direction):

@@ -133,7 +133,6 @@ def root_menu(account_data,manager_root)-> Literal["change region","change profi
                     if not manager_root.sg.sg_id:
                         select_sg_id(manager_root=manager_root)
                     sg_menu(manager_root)
-
                 case "3":
                     kp_menu(manager_root)         
                 case "4":

@@ -6,8 +6,6 @@ from core.decorators import handles_aws_error
 from data.data_ec2 import colors_state
 
 
-logger = logging.getLogger(__name__)
-
 class ManageEc2:
 
     def __init__(self,session_root,region_name = "us-east-1"):
@@ -17,7 +15,7 @@ class ManageEc2:
         self.client_sts = session_root.client("sts",region_name=region_name)
        
     @handles_aws_error
-    def describe_ec2(self)-> str:
+    def describe_ec2(self)-> dict:
 
         response = self.client_ec2.describe_instances()
         return response
@@ -110,7 +108,7 @@ class ManageEc2:
                             ])
         return dict_id_ec2,list_rows
       
-    def waiter_for_state(self, list_instance_ids: str, target_state: str) -> bool:
+    def waiter_for_state(self, list_instance_ids: list, target_state: str) -> bool:
 
         try:
             if target_state == "status_ok":
@@ -120,7 +118,6 @@ class ManageEc2:
             waiter.wait(InstanceIds=list_instance_ids)
             return True
         except WaiterError as e:
-            logger.error(f"Waiter falló para {list_instance_ids} -> {target_state}: {e}")
             return False
     
     def summary_ec2(self):

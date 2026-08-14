@@ -2,13 +2,11 @@ import boto3
 from dotenv import load_dotenv
 
 
-
 def get_profiles():
 
     sessions = boto3.Session()
     profiles = sessions.available_profiles
     return profiles
-
 
 
 def build_session(profile,region_name):
