@@ -1,7 +1,7 @@
 from typing import Literal
 from rich.console import Console
 from rich.prompt import Prompt
-from rich .table import Table
+from rich.table import Table
 from rich.panel import Panel
 from rich.align import Align
 from rich import box
@@ -109,39 +109,39 @@ def build_panel_rules_sg(data:dict,context:str):
 
     table.add_column(
         "Campo",
-        style="bold cyan",
+        style="bold blue",
         justify="right",
         no_wrap=True
     )
 
     table.add_column(
         "Valor",
-        style="white"
+        style="dim magenta"
     )
 
     table.add_row(
         "Protocolo",
-        f"[dim magenta]{ip_protocol}[/dim magenta]"
+        f"{ip_protocol}"
     )
 
     table.add_row(
         "Puerto inicio",
-        f"[dim magenta]{from_port}[/dim magenta]"
+        f"{from_port}"
     )
 
     table.add_row(
         "Puerto fin",
-        f"[dim magenta]{to_port}[/dim magenta]"
+        f"{to_port}"
     )
 
     table.add_row(
         "Cdrip IP",
-        f"[dim magenta]{cdrip_ip}[/dim magenta]"
+        f"{cdrip_ip}"
     )
 
     table.add_row(
         "Descripcion",
-        f"[dim magenta]{description}[/dim magenta]"
+        f"{description}"
     )
 
     panel = Panel(
@@ -168,7 +168,7 @@ def build_panel_deploy_ec2(data: dict,name_instance:str):
 
     table.add_column(
         "Campo",
-        style="bold cyan",
+        style="bold green",
         justify="right",
         no_wrap=True
     )
@@ -180,37 +180,37 @@ def build_panel_deploy_ec2(data: dict,name_instance:str):
 
     table.add_row(
         "Tipo de máquina",
-        f"[dim magenta]{data['InstanceType']}[/dim magenta]"
+        f"{data['InstanceType']}"
     )
 
     table.add_row(
         "AMI ID",
-        f"[dim magenta]{data['ImageId']}[/dim magenta]"
+        f"{data['ImageId']}"
     )
 
     table.add_row(
         "Nombre de instancia",
-        f"[dim magenta]{name_instance}[/dim magenta]"
+        f"{name_instance}"
     )
 
     table.add_row(
         "Llave SSH",
-        f"[dim magenta]{data['KeyName']}[/dim magenta]"
+        f"{data['KeyName']}"
     )
 
     table.add_row(
         "Grupo de seguridad",
-        f"[dim magenta]{data['SecurityGroupIds']}[/dim magenta]"
+        f"{data['SecurityGroupIds']}"
     )
 
     table.add_row(
         "Mínimo de instancias",
-        f"[dim magenta]{data['MinCount']}[/dim magenta]"
+        f"{data['MinCount']}"
     )
 
     table.add_row(
         "Máximo de instancias",
-        f"[dim magenta]{data['MaxCount']}[/dim magenta]"
+        f"{data['MaxCount']}"
     )
 
     panel = Panel(
@@ -226,9 +226,127 @@ def build_panel_deploy_ec2(data: dict,name_instance:str):
         Align.center(panel)
     )
 
+def build_panel_destroy_kp(data: dict):
+
+    table = Table(
+            show_header=False,
+            box=None,
+            padding=(0, 2),
+            expand=True
+        )
+
+    table.add_column(
+        "Campo",
+        style="bold yellow",
+        justify="right",
+        no_wrap=True
+    )
+
+    table.add_column(
+        "Valor",
+        style="white"
+    )
+
+    table.add_row(
+        "Nombre de llave SSH",
+        f"{data['KeyName']}"
+    )
+
+    table.add_row(
+        "SSH ID",
+        f"{data['KeyPairId']}"
+    )
+
+    table.add_row(
+        "Fecha de creación",
+        f"{data["CreateTime"]}"
+    )
+
+    panel = Panel(
+        table,
+        title="[bold white] Datos de llave SSH a eliminar[/bold white]",
+        title_align="center",
+        border_style="yellow",
+        box=box.ROUNDED,
+        padding=(1, 2),
+    )
+
+    console.print(
+        Align.center(panel)
+    )
+
+def build_panel_destroy_ec2(data: dict):
+
+    table = Table(
+        show_header=False,
+        box=None,
+        padding=(0, 2),
+        expand=True
+    )
+
+    table.add_column(
+        "Campo",
+        style="bold green",
+        justify="right",
+        no_wrap=True
+    )
+
+    table.add_column(
+        "Valor",
+        style="dim magenta"
+    )
+
+    table.add_row(
+        "Nombre de la instancia",
+        f"{data['instance_name']}"
+    )
+
+    table.add_row(
+        "Tipo de instancia",
+        f"{data['instance_type']}"
+    )
+
+    table.add_row(
+        "Estado",
+        f"{data["instance_state"]}"
+    )
+
+    table.add_row(
+        "Arquitectura",
+        f"{data['architecture']}"
+    )
+
+    table.add_row(
+        "Instancia ID",
+        f"{data['instance_id']}"
+    )
+
+    table.add_row(
+        "IP Publica",
+        f"{data['instance_ip']}"
+    )
+
+    table.add_row(
+        "Fecha de despliegue",
+        f"{data['time_launch']}"
+    )
+
+    panel = Panel(
+        table,
+        title="[bold white] Datos de instancia a eliminar[/bold white]",
+        title_align="center",
+        border_style="green",
+        box=box.ROUNDED,
+        padding=(1, 2),
+    )
+
+    console.print(
+        Align.center(panel)
+    )
+
 def request_ip_permissions(public_ip:str|None)-> dict:
 
-    console.print("Por favor asegurarse de que los datos ingresados sean correctos.\n",style="bold bright_white",justify="center")
+    console.print(f"Por favor asegurarse de que los datos ingresados sean correctos.\n",style="bold bright_white",justify="center")
     protocol = Prompt.ask(center_text(text="Protocolo (tcp/udp/icmp/-1 para todo) ")).strip()
 
     while True:
@@ -240,9 +358,9 @@ def request_ip_permissions(public_ip:str|None)-> dict:
             break
         elif to_port >= from_port:
             break
-
         console.print("El puerto de inicio no puede ser mayor al puerto fin.",style="yellow italic",justify="center")
         continue
+    
     cidr_ip = Prompt.ask(center_text(text="CIDR IP (ej: 0.0.0.0/0 o ingresa \"1\" para colocar automaticamente su ip publica) ")).strip()
     description = Prompt.ask(center_text(text="Descripción de la regla (opcional) "))
     cidr_ip_finaly = public_ip if cidr_ip == "1" else cidr_ip

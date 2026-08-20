@@ -53,7 +53,7 @@ class EC2Controller:
 
             name_instance,config_instace = build_instance_config(manager_root=self.manager_root)
             prompt_general.build_panel_deploy_ec2(data=config_instace,name_instance=name_instance)
-            confirmation = prompt_general.confirmation_config(data=config_instace)
+            confirmation = prompt_general.confirmation_config()
             match confirmation:
                  case "confirm":
                       break
@@ -94,7 +94,8 @@ class EC2Controller:
         self._validate_state(instance_state=instance_state,operation=selection)
         msg_init,target_state,msg_finally = data_ec2.parameter_operation_ec2[selection]
         if target_state == "terminated":
-            prompt_general.confirmation()
+            prompt_general.build_panel_destroy_ec2(data=data_instace)
+            prompt_general.confimation_operation_destroy()
 
         metodos_ec2 = {
             "3": self.manager_root.ec2.init_ec2,

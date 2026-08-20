@@ -89,21 +89,29 @@ class ManageEc2:
                 fecha_formateada = fecha.strftime("%Y/%m/%d %H:%M:%S")
                 instance_state = instance["State"].get("Name")
                 instance_state_color = colors_state.get(instance_state,instance_state)
-                nombre = "Sin nombre"
-                dict_id_ec2[str(indice)] = {"instance_id":instance.get("InstanceId"),
-                                            "instance_state": instance_state}
+                instance_name = "Sin nombre"
+                
              
                 for tag in instance.get("Tags",[]):
                     if tag.get("Key") == "Name":
-                        nombre = tag.get("Value","Sin Nombre")
+                        instance_name = tag.get("Value","Sin Nombre")
                         break
 
+                dict_id_ec2[str(indice)] = {"instance_id":instance.get("InstanceId"),
+                                            "instance_state": instance_state,
+                                            "instance_name": instance_name,
+                                            "instance_type": instance["InstanceType"],
+                                            "instance_ip": instance.get("PublicIpAddress","Sin IP publica"),
+                                            "architecture": instance["Architecture"],
+                                            "time_launch": fecha_formateada}
+                
                 list_rows.append([str(indice),
-                                    nombre,
+                                    instance_name,
                                     instance.get("InstanceType"),
                                     instance_state_color,
-                            instance.get("Architecture"),instance.get("InstanceId"),
-                            instance.get("PublicIpAddress","Sin ip publica"),
+                            instance.get("Architecture"),
+                            instance.get("InstanceId"),
+                            instance.get("PublicIpAddress","Sin IP publica"),
                             fecha_formateada
                             ])
         return dict_id_ec2,list_rows

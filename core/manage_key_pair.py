@@ -31,8 +31,10 @@ class ManageKeyPairs:
             fecha = key.get("CreateTime")
             fecha_formateada = fecha.strftime("%Y/%m/%d %H:%M:%S")
 
-            dict_key_id[str(indice)] = key.get("KeyName",None)
-
+            dict_key_id[str(indice)] = {"KeyName": key.get("KeyName",None),
+                                        "KeyPairId":key.get("KeyPairId",None),
+                                        "CreateTime":fecha_formateada
+                                        }
             list_rows.append([
                 str(indice),
                 key.get("KeyName","Sin llave"),

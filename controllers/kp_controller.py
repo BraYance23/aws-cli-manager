@@ -35,7 +35,8 @@ class KPController:
     def delete_key_pairs(self):
   
         key_selected  = self.select_key_pair()
-        prompt_general.confirmation()
+        prompt_general.build_panel_destroy_kp(data=key_selected)
+        prompt_general.confimation_operation_destroy()
         delete_code = self.manager_root.key_pair.delete_key_pair(key_selected)
         logger.info(f"Llave SSH eliminada con exito | Nombre de llave : {key_selected}")
         print_message(message=f"Llave SSH : '{key_selected}.pem' eliminada con exito.",style_message="green italic")
