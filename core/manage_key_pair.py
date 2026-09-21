@@ -65,7 +65,6 @@ class ManageKeyPairs:
     def delete_key_pair(self,key_delete:str)-> str:
 
         self.client_ec2.delete_key_pair(KeyName=key_delete)
-        return key_delete
 
     def summary_key_pairs(self)-> dict:
 
