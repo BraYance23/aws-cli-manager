@@ -1,7 +1,7 @@
 import logging
 from core.decorators import handles_aws_error
 from schemas import DictFormatSGRules
-from exceptions import NoSecurityGroups
+from exceptions import NoSecurityGroups,NoVpc
 
 
 class ManageSecurityGroup:
@@ -26,11 +26,24 @@ class ManageSecurityGroup:
         return response
 
     @handles_aws_error
+    def is_sg_in_use(self, sg_id: str) -> bool:
+        response = self.client_ec2.describe_network_interfaces(
+            Filters=[{"Name": "group-id", "Values": [sg_id]}]
+        )
+        return bool(response["NetworkInterfaces"])
+    
+    @handles_aws_error
     def get_sg_general(self)-> dict:
 
         response = self.client_ec2.describe_security_groups()
         return response
 
+    @handles_aws_error
+    def get_vpcs(self)-> dict:
+
+        response = self.client_ec2.describe_vpcs()
+        return response
+   
     def _parser_rules(self,ip_permissions:list)-> tuple[list,dict]:
 
         list_rows = []
@@ -98,6 +111,43 @@ class ManageSecurityGroup:
             dict_sg_id[str(indice)] = valor.get("GroupId")
         
         return list_rows,dict_sg_id
+
+    def format_data_vpc(self,response:dict)-> tuple[list,dict]:
+
+        dict_vpcs_id = {}
+        list_rows = []
+
+        if not response["Vpcs"]:
+            raise NoVpc(region=self.region_name)
+
+        for indice,vpc in enumerate(response["Vpcs"],start=1):
+
+            list_rows.append([
+                str(indice),
+                vpc["VpcId"],
+                vpc["State"],
+                vpc["CidrBlock"]
+            ])
+            dict_vpcs_id[str(indice)] = vpc["VpcId"]
+        return list_rows,dict_vpcs_id
+
+    @handles_aws_error
+    def create_sg(self,description,group_name,vpc_id)-> dict:
+
+        response = self.client_ec2.create_security_group(
+                Description=description,
+                GroupName=group_name,
+                VpcId=vpc_id)
+        return response
+
+    @handles_aws_error
+    def delete_sg(self,sg_id:str)->str:
+
+        response = self.client_ec2.delete_security_group(
+            GroupId=sg_id
+        )
+
+        return response["Return"]
 
     @handles_aws_error
     def authorize_rule_ingress(self,ip_permissions:dict)-> dict:
