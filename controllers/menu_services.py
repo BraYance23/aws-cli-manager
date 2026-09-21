@@ -83,6 +83,33 @@ def sg_menu(manager_root):
         except exceptions.AWSError as e:
             handle_aws_error(e.code)
 
+def sg_root_menu(manager_root):
+
+    sg_controller = SGController(manager_root=manager_root)
+
+    while True:
+
+        try:
+            options_menu_root_sg = data_ec2.main_root_sg
+            menus.print_menu_root_sg()
+            choice_option = choice_options_menu(dict_options=options_menu_root_sg)
+
+            match choice_option:
+
+                case "1":
+                        if not manager_root.sg.sg_id:
+                            select_sg_id(manager_root=manager_root)
+                        sg_menu(manager_root)
+                case "2":
+                    sg_controller.create_sg()
+                case "3":
+                    sg_controller.delete_sg()
+                case "0":
+                    break
+
+        except exceptions.AWSError as e:
+            handle_aws_error(e.code)
+           
 def kp_menu(manager_root):
 
     kp_controller = KPController(manager_root=manager_root)
@@ -94,7 +121,6 @@ def kp_menu(manager_root):
             choice_key_pair = choice_options_menu(dict_options=options_key_pair)
 
             match choice_key_pair:
-
                 case "1":
                     kp_controller.show_key_pairs()
                     input(center_text("Presione enter para continuar"))
@@ -120,7 +146,6 @@ def root_menu(account_data,manager_root)-> Literal["change region","change profi
     while True:
 
         try:
-
             summary_resources = get_summary_all(manager_root)
             menus.print_root_menu(account_data=account_data,summary=summary_resources)
             options_root = data_ec2.main_root
@@ -128,13 +153,11 @@ def root_menu(account_data,manager_root)-> Literal["change region","change profi
             match choice_aws:
 
                 case "1":
-                    ec2_menu(manager_root)
+                    ec2_menu(manager_root=manager_root)
                 case "2":
-                    if not manager_root.sg.sg_id:
-                        select_sg_id(manager_root=manager_root)
-                    sg_menu(manager_root)
+                    sg_root_menu(manager_root=manager_root)
                 case "3":
-                    kp_menu(manager_root)         
+                    kp_menu(manager_root=manager_root)         
                 case "4":
                     reset_data_dashboard()
                     return "change region"
@@ -152,7 +175,6 @@ def reset_data_dashboard():
     for service in data_ec2.dashboard_services:
         data_ec2.dashboard_dirty[service]["needs_update"] = True
         data_ec2.dashboard_dirty[service]["last_summary"] = None
-
 
 def get_summary_all(manager_root):
 
