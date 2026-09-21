@@ -1,5 +1,5 @@
 import logging
-from data.data_ec2 import main_kp_deploy
+from config.menu_structure import main_kp_deploy
 from ui.messages import print_message
 from ui.menus import print_menu_deploy_kp
 from ui import prompt_general

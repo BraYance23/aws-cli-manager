@@ -3,8 +3,8 @@ import logging
 from ui.messages import print_message,spinner
 from controllers.deploy_flow import build_instance_config
 from ui import prompt_general,tables
-from data import data_ec2
 from exceptions import InvalidOperationEC2
+from config.ec2_operations import parameter_operation_ec2, permissions_ec2
 
 
 
@@ -17,7 +17,7 @@ class EC2Controller:
 
     def _validate_state(self,instance_state,operation):
 
-         operation_selected = data_ec2.permissions_ec2[operation]
+         operation_selected = permissions_ec2[operation]
          permissions = operation_selected["permissions"]
          message = operation_selected["message"]
 
@@ -92,7 +92,7 @@ class EC2Controller:
         instance_id = data_instace["instance_id"]
 
         self._validate_state(instance_state=instance_state,operation=selection)
-        msg_init,target_state,msg_finally = data_ec2.parameter_operation_ec2[selection]
+        msg_init,target_state,msg_finally = parameter_operation_ec2[selection]
         if target_state == "terminated":
             prompt_general.build_panel_destroy_ec2(data=data_instace)
             prompt_general.confimation_operation_destroy()

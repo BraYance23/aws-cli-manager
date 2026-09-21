@@ -1,6 +1,6 @@
 from datetime import datetime
 from core.decorators import handles_aws_error
-from data import data_ec2
+from config.aws_config import VERSION_OS
 
 
 class ManageAmi:
@@ -53,7 +53,7 @@ class ManageAmi:
         dict_distro = {}
         list_rows = []
          
-        for indice,valor in enumerate(data_ec2.VERSION_OS[election],start=1):
+        for indice,valor in enumerate(VERSION_OS[election],start=1):
             list_rows.append([str(indice),
                                   valor,
                                   "x86_64",

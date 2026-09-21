@@ -6,8 +6,13 @@ from controllers.deploy_flow import select_sg_id
 from ui import menus
 from ui.messages import handle_aws_error,print_message
 from ui.prompt_general import choice_options_menu,center_text
-from data import data_ec2
 import exceptions
+from config.menu_structure import (
+    main_root, main_ec2, main_sg, main_key_pair, main_root_sg
+)
+from config.dashboard_config import (
+    dashboard_dirty, dashboard_services, summary_fallback
+)
 
 
 def ec2_menu(manager_root):
@@ -16,7 +21,7 @@ def ec2_menu(manager_root):
     while True:
 
         try:
-            options_ec2 =  data_ec2.main_ec2
+            options_ec2 = main_ec2
             print("\n")
             menus.print_menu_ec2()
             choice_ec2 = choice_options_menu(options_ec2)
@@ -27,11 +32,11 @@ def ec2_menu(manager_root):
                     input(center_text("Presione enter para continuar"))
                 case "2":
                     ec2_controller.run_ec2()
-                    data_ec2.dashboard_dirty["ec2"]["needs_update"] = True
+                    dashboard_dirty["ec2"]["needs_update"] = True
                 case "3" | "4" |"5" | "6":
                     change_dashboard = ec2_controller.operation_ec2(choice_ec2)
                     if change_dashboard:
-                        data_ec2.dashboard_dirty["ec2"]["needs_update"] = True
+                        dashboard_dirty["ec2"]["needs_update"] = True
                 case "7":
                     break
         except exceptions.InvalidOperationEC2 as e:
@@ -50,7 +55,7 @@ def sg_menu(manager_root):
 
         try:
             menus.print_menu_sg(sg_id=manager_root.sg.sg_id,region_name=manager_root.region_name)
-            options_sg = data_ec2.main_sg
+            options_sg = main_sg
             choice_operation = choice_options_menu(dict_options=options_sg)
 
             match choice_operation:
@@ -90,7 +95,7 @@ def sg_root_menu(manager_root):
     while True:
 
         try:
-            options_menu_root_sg = data_ec2.main_root_sg
+            options_menu_root_sg = main_root_sg
             menus.print_menu_root_sg()
             choice_option = choice_options_menu(dict_options=options_menu_root_sg)
 
@@ -116,7 +121,7 @@ def kp_menu(manager_root):
     while True:
 
         try:
-            options_key_pair = data_ec2.main_key_pair
+            options_key_pair = main_key_pair
             menus.print_menu_kp(manager_root.region_name)
             choice_key_pair = choice_options_menu(dict_options=options_key_pair)
 
@@ -126,10 +131,10 @@ def kp_menu(manager_root):
                     input(center_text("Presione enter para continuar"))
                 case "2":
                     kp_controller.generate_key_pairs()
-                    data_ec2.dashboard_dirty["kp"]["needs_update"] = True
+                    dashboard_dirty["kp"]["needs_update"] = True
                 case "3":
                     kp_controller.delete_key_pairs()
-                    data_ec2.dashboard_dirty["kp"]["needs_update"] = True
+                    dashboard_dirty["kp"]["needs_update"] = True
                 case "4":
                     break
         except (PermissionError,OSError) as e:
@@ -148,7 +153,7 @@ def root_menu(account_data,manager_root)-> Literal["change region","change profi
         try:
             summary_resources = get_summary_all(manager_root)
             menus.print_root_menu(account_data=account_data,summary=summary_resources)
-            options_root = data_ec2.main_root
+            options_root = main_root
             choice_aws = choice_options_menu(dict_options=options_root)
             match choice_aws:
 
@@ -172,9 +177,9 @@ def root_menu(account_data,manager_root)-> Literal["change region","change profi
 
 def reset_data_dashboard():
 
-    for service in data_ec2.dashboard_services:
-        data_ec2.dashboard_dirty[service]["needs_update"] = True
-        data_ec2.dashboard_dirty[service]["last_summary"] = None
+    for service in dashboard_services:
+        dashboard_dirty[service]["needs_update"] = True
+        dashboard_dirty[service]["last_summary"] = None
 
 def get_summary_all(manager_root):
 
@@ -184,16 +189,16 @@ def get_summary_all(manager_root):
         "sg": manager_root.sg.summary_sg,
         "kp": manager_root.key_pair.summary_key_pairs
     }
-    for service in data_ec2.dashboard_services:
+    for service in dashboard_services:
         try:
-            if data_ec2.dashboard_dirty[service]["needs_update"]:
+            if dashboard_dirty[service]["needs_update"]:
                 summary_service = services_func[service]()
-                data_ec2.dashboard_dirty[service]["needs_update"] = False
+                dashboard_dirty[service]["needs_update"] = False
                 summary_total.update(summary_service)
-                data_ec2.dashboard_dirty[service]["last_summary"] = summary_service[f"summary_{service}"]
+                dashboard_dirty[service]["last_summary"] = summary_service[f"summary_{service}"]
             else:
-                summary_total[f"summary_{service}"] = data_ec2.dashboard_dirty[service]["last_summary"]
+                summary_total[f"summary_{service}"] = dashboard_dirty[service]["last_summary"]
 
         except exceptions.AWSError:
-                summary_total[f"summary_{service}"] = data_ec2.summary_fallback[service]
+                summary_total[f"summary_{service}"] = summary_fallback[service]
     return summary_total

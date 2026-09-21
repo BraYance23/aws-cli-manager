@@ -4,7 +4,7 @@ from rich.align import Align
 from rich.panel import Panel
 from rich.spinner import Spinner
 from rich.live import Live
-from data.data_ec2 import AWS_ERROR_MESSAGES
+from config.error_messages import AWS_ERROR_MESSAGES
 
 
 console = Console()

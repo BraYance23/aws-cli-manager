@@ -1,6 +1,6 @@
 import logging
 from typing import Callable
-from data.data_ec2 import main_sg_deploy
+from config.menu_structure import main_sg_deploy
 from ui.messages import print_message
 from ui.menus import print_menu_deploy_sg
 from ui import prompt_general

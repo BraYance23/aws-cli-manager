@@ -5,7 +5,7 @@ from rich import box
 from rich.align import Align
 from core.aws_profiles import get_profiles
 from ui.prompt_general import choice_options_table,choice_profile
-from data.data_ec2 import AWS_REGIONS
+from config.aws_config import AWS_REGIONS
 
 
 console = Console()

@@ -1,9 +1,8 @@
 import  time
-import logging
 from botocore.exceptions import ClientError,NoCredentialsError,WaiterError,PartialCredentialsError,ProfileNotFound
 from exceptions import AWSError,NoEC2Instances,CredentialsError
 from core.decorators import handles_aws_error
-from data.data_ec2 import colors_state
+from config.ec2_operations import colors_state
 
 
 class ManageEc2:
