@@ -1,11 +1,12 @@
-import json
 import logging
 from typing import Callable
+from data.data_ec2 import main_sg_deploy
 from ui.messages import print_message
+from ui.menus import print_menu_deploy_sg
 from ui import prompt_general
 from ui import tables
 from utils.network import get_ip_public
-from exceptions import NoEgressRules,NoIngressRules
+from exceptions import NoEgressRules,NoIngressRules,NoVpc
 
 
 logger = logging.getLogger(__name__)
@@ -15,13 +16,50 @@ class SGController:
     def __init__(self,manager_root):
         self.manager_root = manager_root
 
-    def inject_sg_id(self):
+    def select_sg_id(self):
 
         response = self.manager_root.sg.get_sg_general()
         rich_rows,dict_sg_id = self.manager_root.sg.format_data_sg_general(response)
-        tables.print_table_sg(title="Security Groups Existentes",list_rows=rich_rows)
+        tables.print_table_sg(list_rows=rich_rows)
         return prompt_general.choice_options_table(dict_data=dict_sg_id,context="del grupo de seguridad que desea administrar")
-            
+
+    def create_sg(self)-> str:
+
+        description,group_name = prompt_general.request_data_sg_create()
+        vpc_id = self.select_vpc_id()
+        response = self.manager_root.sg.create_sg(description=description,
+                                                  group_name=group_name,
+                                                  vpc_id=vpc_id)
+        sg_id = response["GroupId"]
+        print_message(message=f"Grupo de seguridad creado con exito.\nSG ID : {sg_id}")
+        logger.info(f"Grupo se seguridad creado con exito | SG ID : {sg_id} - {self.manager_root.region_name}")
+        return sg_id
+        
+        
+    def delete_sg(self):
+
+        sg_id = self.select_sg_id()
+        it_is_associated = self.manager_root.sg.is_sg_in_use(sg_id=sg_id)
+        if it_is_associated:
+            print_message(message=f"El grupo de seguridad : {sg_id} tiene recursos asociados, por lo cual no se puede eleminar.",
+                          style_message="yellow italic")
+            return
+
+        response = self.manager_root.sg.delete_sg(sg_id=sg_id)
+        print_message(message=f"Grupo de seguridad : {sg_id} eliminado con exito.",
+                      style_message="green italic")
+        logger.info(f"Grupo de seguridad : {sg_id} eliminado con exito de la region : {self.manager_root.region_name}")
+        
+
+    def select_vpc_id(self):
+
+        response = self.manager_root.sg.get_vpcs()
+        list_rows,dict_vpc_id = self.manager_root.sg.format_data_vpc(response=response)
+        tables.print_table_vpc(list_rows=list_rows)
+        selected_vpc_id = prompt_general.choice_options_table(dict_data=dict_vpc_id,
+                                                              context="de la vpc que desea asociar a su SG ")
+        return selected_vpc_id
+
     def show_rules_sg(self,direction:str):
 
         response = self.manager_root.sg.get_sg_rules(self.manager_root.sg.sg_id)
@@ -43,6 +81,17 @@ class SGController:
                 return
             raise NoEgressRules(sg_id=self.manager_root.sg.sg_id,region=self.manager_root.region_name)
 
+    def select_sg_id(self)-> str:
+
+        response = self.manager_root.sg.get_sg_general()
+
+        list_rows,dict_sg_id = self.manager_root.sg.format_data_sg_general(response=response)
+        tables.print_table_sg(list_rows=list_rows)
+
+        selected_sg_id = prompt_general.choice_options_table(
+            dict_data=dict_sg_id,
+            context="del grupo de seguirdad que desea")
+        return selected_sg_id
 
     def _get_ip_permissions(self)-> dict:
 
@@ -108,8 +157,25 @@ class SGController:
                                  action_name="Revoke_egress")
 
 
+    def resolve_sg_deploy(self):
+
+        print_menu_deploy_sg()
+
+        while True:
+            selected_vpc= prompt_general.choice_options_menu(
+                dict_options=main_sg_deploy)
+
+            match selected_vpc:
+                        case "1":
+                            return self.create_sg()
+                        case "2":
+                            try:
+                                return self.select_sg_id()
+                            except NoVpc as e:
+                                    print_message(message=str(e),style_message="yellow italic")
+
     def change_sg_id(self):
 
-        selected_sg_id = self.inject_sg_id()
+        selected_sg_id = self.select_sg_id()
         self.manager_root.sg.sg_id = selected_sg_id
         return True
