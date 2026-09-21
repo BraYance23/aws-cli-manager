@@ -2,7 +2,7 @@ import logging
 from config.menu_structure import main_kp_deploy
 from ui.messages import print_message
 from ui.menus import print_menu_deploy_kp
-from ui import prompt_general
+from ui import prompts, panels
 from ui import tables
 from exceptions import NoKeyPairs
 
@@ -26,11 +26,11 @@ class KPController:
         response = self.manager_root.key_pair.request_key_pairs()
         dict_key,list_rows = self.manager_root.key_pair.format_data(response)
         tables.print_table_kp(title="Llaves SSH existentes",list_rows=list_rows)
-        return prompt_general.choice_options_table(dict_data=dict_key,context=f"de la llave de SSH que desea {context} ")
+        return prompts.choice_options_table(dict_data=dict_key,context=f"de la llave de SSH que desea {context} ")
         
     def generate_key_pairs(self):
 
-        name_key = prompt_general.request_name_key()
+        name_key = prompts.request_name_key()
         private_key = self.manager_root.key_pair.generate_key_pair(name_key)
         response_save_key = self.manager_root.key_pair.save_key_pair(private_key,name_key)
         logger.info(f"llave SSH creada con exito | nombre de la llave : {name_key}")
@@ -40,8 +40,8 @@ class KPController:
     def delete_key_pairs(self):
   
         key_selected  = self.select_key_pair(context="eliminar")
-        prompt_general.build_panel_destroy_kp(data=key_selected)
-        prompt_general.confimation_operation_destroy()
+        panels.build_panel_destroy_kp(data=key_selected)
+        prompts.confimation_operation_destroy()
         key_name = key_selected["KeyName"]
         self.manager_root.key_pair.delete_key_pair(key_name)
         logger.info(f"Llave SSH eliminada con exito | Nombre de llave : {key_name} - ID : {key_selected["KeyPairId"]}")
@@ -53,7 +53,7 @@ class KPController:
         print_menu_deploy_kp()
 
         while True:
-            selected_option = prompt_general.choice_options_menu(
+            selected_option = prompts.choice_options_menu(
                 dict_options=(main_kp_deploy))
 
             match selected_option:

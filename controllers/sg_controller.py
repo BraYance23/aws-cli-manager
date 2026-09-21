@@ -3,7 +3,7 @@ from typing import Callable
 from config.menu_structure import main_sg_deploy
 from ui.messages import print_message
 from ui.menus import print_menu_deploy_sg
-from ui import prompt_general
+from ui import prompts, panels
 from ui import tables
 from utils.network import get_ip_public
 from exceptions import NoEgressRules,NoIngressRules,NoVpc
@@ -21,11 +21,11 @@ class SGController:
         response = self.manager_root.sg.get_sg_general()
         rich_rows,dict_sg_id = self.manager_root.sg.format_data_sg_general(response)
         tables.print_table_sg(list_rows=rich_rows)
-        return prompt_general.choice_options_table(dict_data=dict_sg_id,context="del grupo de seguridad que desea administrar")
+        return prompts.choice_options_table(dict_data=dict_sg_id,context="del grupo de seguridad que desea administrar")
 
     def create_sg(self)-> str:
 
-        description,group_name = prompt_general.request_data_sg_create()
+        description,group_name = prompts.request_data_sg_create()
         vpc_id = self.select_vpc_id()
         response = self.manager_root.sg.create_sg(description=description,
                                                   group_name=group_name,
@@ -56,7 +56,7 @@ class SGController:
         response = self.manager_root.sg.get_vpcs()
         list_rows,dict_vpc_id = self.manager_root.sg.format_data_vpc(response=response)
         tables.print_table_vpc(list_rows=list_rows)
-        selected_vpc_id = prompt_general.choice_options_table(dict_data=dict_vpc_id,
+        selected_vpc_id = prompts.choice_options_table(dict_data=dict_vpc_id,
                                                               context="de la vpc que desea asociar a su SG ")
         return selected_vpc_id
 
@@ -88,7 +88,7 @@ class SGController:
         list_rows,dict_sg_id = self.manager_root.sg.format_data_sg_general(response=response)
         tables.print_table_sg(list_rows=list_rows)
 
-        selected_sg_id = prompt_general.choice_options_table(
+        selected_sg_id = prompts.choice_options_table(
             dict_data=dict_sg_id,
             context="del grupo de seguirdad que desea")
         return selected_sg_id
@@ -97,9 +97,9 @@ class SGController:
 
         ip_public = get_ip_public()
         while True:
-            ip_permissions = prompt_general.request_ip_permissions(ip_public)
-            prompt_general.build_panel_rules_sg(data=ip_permissions,context="crear")
-            confirmation = prompt_general.confirmation_config()   
+            ip_permissions = prompts.request_ip_permissions(ip_public)
+            panels.build_panel_rules_sg(data=ip_permissions,context="crear")
+            confirmation = prompts.confirmation_config()   
             match confirmation:
                 case "confirm":
                     return ip_permissions
@@ -131,14 +131,14 @@ class SGController:
         data_sg  = self.manager_root.sg.format_data_sg_rules(response)
         dict_rules = data_sg.get(f"dict_rules_{direction}")
         self.show_rules_sg(direction)
-        selected_rule = prompt_general.choice_options_table(dict_data=dict_rules,context="de la regla de seguridad que desea eliminar ")
+        selected_rule = prompts.choice_options_table(dict_data=dict_rules,context="de la regla de seguridad que desea eliminar ")
         return selected_rule
 
     def _revoke_sg_rule(self,direction:str,revoke_fun:Callable,action_name:str):
 
         selected_rule = self._get_rule_revoke(direction=direction)
-        prompt_general.build_panel_rules_sg(data=selected_rule,context="eliminar")
-        prompt_general.confimation_operation_destroy()
+        panels.build_panel_rules_sg(data=selected_rule,context="eliminar")
+        prompts.confimation_operation_destroy()
         sg_rule_id = selected_rule["SecurityGroupRuleId"]
         response = revoke_fun(sg_rule_id)
 
@@ -162,7 +162,7 @@ class SGController:
         print_menu_deploy_sg()
 
         while True:
-            selected_vpc= prompt_general.choice_options_menu(
+            selected_vpc= prompts.choice_options_menu(
                 dict_options=main_sg_deploy)
 
             match selected_vpc:

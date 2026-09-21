@@ -5,7 +5,8 @@ from controllers.kp_controller import KPController
 from controllers.deploy_flow import select_sg_id
 from ui import menus
 from ui.messages import handle_aws_error,print_message
-from ui.prompt_general import choice_options_menu,center_text
+from ui.prompts import choice_options_menu
+from ui.console import center_text
 import exceptions
 from config.menu_structure import (
     main_root, main_ec2, main_sg, main_key_pair, main_root_sg

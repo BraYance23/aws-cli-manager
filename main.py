@@ -8,7 +8,7 @@ from core.manage_ec2 import ManageEc2
 from core.aws_profiles import build_session
 from controllers import menu_services
 from ui.messages import print_message,handle_aws_error
-from ui.tables import select_region_name,select_profile
+from controllers.session_flow import select_region_name,select_profile
 import exceptions
 
 logging_config.setup_logging()
