@@ -1,3 +1,6 @@
+"""
+Mensajes en consola: texto centrado, paneles, spinner y errores de AWS
+"""
 import time
 from rich.console import Console
 from rich.align import Align
@@ -5,9 +8,7 @@ from rich.panel import Panel
 from rich.spinner import Spinner
 from rich.live import Live
 from config.error_messages import AWS_ERROR_MESSAGES
-
-
-console = Console()
+from ui.console import console
 
 def print_message(message:str,style_message:str=""):
 
