@@ -8,6 +8,39 @@ from rich.text import Text
 
 console = Console()
 
+def print_menu_deploy_sg():
+
+    kp_menu_opions = Text.from_markup(
+        "[blue][1][/blue]    Crear security group\n"
+        "[blue][2][/blue] Seleccionar security group"
+    )
+
+    panel = Panel(
+        Align.center(kp_menu_opions),
+        title="[bold bright_white]Manager SG[/bold bright_white]",
+        border_style="blue",
+        padding=(1,5),
+        expand=False
+    )
+
+    console.print(Align.center(panel))
+
+def print_menu_deploy_kp():
+
+    kp_menu_opions = Text.from_markup(
+        "[yellow][1][/yellow] \t  Crear llave SSH\n"
+        "[yellow][2][/yellow] Seleccionar llave SSH existente"
+    )
+
+    panel = Panel(
+        Align.center(kp_menu_opions),
+        title="[bold bright_white]Manager Key Pairs[/bold bright_white]",
+        border_style="yellow",
+        padding=(1,5),
+        expand=False
+    )
+
+    console.print(Align.center(panel))
 def print_menu_kp(region):
 
     kp_menu_options = Text.from_markup(
@@ -27,6 +60,24 @@ def print_menu_kp(region):
 
     console.print(Align.center(panel))
 
+def print_menu_root_sg():
+
+    options_menu_root_sg = Text.from_markup(
+        "[blue][1][/blue] Administrar reglas de un SG\n"
+        "[blue][2][/blue] Crear nuevo SG\n"
+        "[blue][3][/blue] Eliminar un SG\n"
+        "[blue][0][/blue] Volver al menu principal"
+        
+    )
+
+    panel = Panel(
+        Align.center(options_menu_root_sg),
+        title="[bold bright_white]Manager Security Groups[/bold bright_white]",
+        border_style="blue",
+        padding=(1,5),
+        expand=False
+    )
+    console.print(Align.center(panel))
 def print_menu_sg(sg_id:str,region_name:str):
 
     grid = Table(
@@ -168,3 +219,8 @@ def print_root_menu(account_data,summary):
     console.print(Align.center(rows_badge))
     console.print(Align.center(panel_menu))
     console.print()
+
+
+
+if __name__ == "__main__":
+    print_menu_root_sg()

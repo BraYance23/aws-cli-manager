@@ -10,7 +10,7 @@ from data.data_ec2 import AWS_REGIONS
 
 console = Console()
 
-def print_table_sg(title:str,list_rows:list):
+def print_table_sg(list_rows:list):
 
     console = Console()
     
@@ -262,7 +262,33 @@ def print_table_ami(list_header:list,title:str,list_rows:list):
     )
     console.print(Align.center(panel))
 
+def print_table_vpc(list_rows:list):
+
+    table = Table(
+    box=box.DOUBLE_EDGE,
+    show_lines=True,
+    header_style="bold blue"
+)
+
+    table.add_column("#", justify="center", width=4)
+
+    table.add_column("VPC ID",justify="center")
+
+    table.add_column("Estado", justify="center")
+
+    table.add_column("CIDR BLOCK", justify="center")
 
 
+    for row in list_rows:
+        table.add_row(*row)
+
+        panel = Panel(
+        Align.center(table),
+        title=f"[bold bright_white]{"VPC Disponibles"}[/bold bright_white]",
+        border_style="blue",
+        padding=(1,3),
+        expand=False
+    )
+    console.print(Align.center(panel))
 if __name__ == "__main__":
     pass

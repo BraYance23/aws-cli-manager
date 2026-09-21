@@ -200,7 +200,7 @@ def build_panel_deploy_ec2(data: dict,name_instance:str):
 
     table.add_row(
         "Grupo de seguridad",
-        f"{data['SecurityGroupIds']}"
+        f"{data['SecurityGroupIds'][0]}"
     )
 
     table.add_row(
@@ -349,17 +349,18 @@ def request_ip_permissions(public_ip:str|None)-> dict:
     console.print(f"Por favor asegurarse de que los datos ingresados sean correctos.\n",style="bold bright_white",justify="center")
     protocol = Prompt.ask(center_text(text="Protocolo (tcp/udp/icmp/-1 para todo) ")).strip()
 
-    while True:
-  
-        from_port = ask_int(prompt="Puerto inicio : ",value_min=1,value_max=65535,msg_max="El rango valido para puertos es : 1 -") if protocol != "-1" else -1
-        to_port = ask_int(prompt="Puerto fin : ",value_min=1,value_max=65535,msg_max="El rango valido para puertos es : 1 -") if protocol != "-1" else -1
+    if protocol in ("icmp","-1"):
+        from_port,to_port = -1,-1
+    else:
+        while True:
+    
+            from_port = ask_int(prompt="Puerto inicio : ",value_min=1,value_max=65535,msg_max="El rango valido para puertos es : 1 -")
+            to_port = ask_int(prompt="Puerto fin : ",value_min=1,value_max=65535,msg_max="El rango valido para puertos es : 1 -") 
 
-        if protocol == "-1":
-            break
-        elif to_port >= from_port:
-            break
-        console.print("El puerto de inicio no puede ser mayor al puerto fin.",style="yellow italic",justify="center")
-        continue
+            if to_port >= from_port:
+                break
+            console.print("El puerto de inicio no puede ser mayor al puerto fin.",style="yellow italic",justify="center")
+            continue
     
     cidr_ip = Prompt.ask(center_text(text="CIDR IP (ej: 0.0.0.0/0 o ingresa \"1\" para colocar automaticamente su ip publica) ")).strip()
     description = Prompt.ask(center_text(text="Descripción de la regla (opcional) "))
@@ -384,7 +385,24 @@ def request_name_key()-> str:
         if name_key:
             return name_key
         console.print("No se puede crear una llave sin nombre",style="yellow italic",justify="center")
-            
+
+def ask_data(context:str):
+
+    while True:
+
+        data = Prompt.ask(center_text(context)).strip()
+        if data:
+            return data
+        console.print("No se aceptan valores vacios")
+
+
+def request_data_sg_create()-> tuple[str,str]:
+
+    group_name = ask_data(context="Ingrese el nombre del grupo de seguridad que deasea crear ")
+    description = ask_data(context="Ingrese una descripción breve del SG que desea crear ")
+
+    return group_name,description
+
 def ask_int(prompt:str,value_min:int = 1,value_max:int = 100,msg_max:str="")-> int:
 
     while True:
