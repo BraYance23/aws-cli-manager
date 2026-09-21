@@ -39,6 +39,11 @@ class NoIngressRules(ResourceNotFound):
 class NoEgressRules(ResourceNotFound):
     def __str__(self):
             return f"No hay reglas de salida en el grupo de seguridad : {self.sg_id} | Region : {self.region}"
+
+class NoVpc(ResourceNotFound):
+
+    def __str__(self):
+        return f"No hay VPCS existentes en la region : {self.region}"
     
 class NoKeyPairs(ResourceNotFound):
 

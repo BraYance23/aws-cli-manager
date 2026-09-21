@@ -260,6 +260,16 @@ main_key_pair = {"1": "Listar llaves SSH",
                  "3": "Eliminar llave SSH",
                  "4": "Volver al menu principal"}
 
+main_root_sg = {"1": "Administrar reglas de un SG",
+                "2": "Crear nuevo SG",
+                "3": "Eliminar un SG",
+                "0": "Volver al menu principal"}
+
+
+main_sg_deploy = {"1":"Crear nuevo grupo de seguridad",
+                  "2": "Seleccionar grupo de seguridad existente"}
+main_kp_deploy = {"1": "Crear nueva llave SSH",
+                  "2": "Seleccionar llave SSH existente"}
 """
 Manejo de errores centraliazado
 """
