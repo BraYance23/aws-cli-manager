@@ -4,6 +4,18 @@ Paneles de detalle para reglas de Security Groups
 from ui.panels.base import print_detail_panel
 
 
+def build_panel_sg(group_name:str,sg_id:str):
+
+    print_detail_panel(
+        title="Grupo de seguridad",
+        rows=[
+            ("Group Name",group_name),
+            ("Group ID",sg_id),
+        ],
+        label_style="bold blue",
+        value_style="dim magenta",
+        border_style="blue"
+    )
 def build_panel_rules_sg(data: dict, context: str):
 
     ip_protocol = data["IpProtocol"]

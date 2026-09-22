@@ -13,7 +13,7 @@ def print_menu_root_sg():
         "[blue][1][/blue] Administrar reglas de un SG\n"
         "[blue][2][/blue] Crear nuevo SG\n"
         "[blue][3][/blue] Eliminar un SG\n"
-        "[blue][0][/blue] Volver al menu principal"
+        "[yellow][4][/yellow] Volver al menu principal"
     )
 
     print_menu_panel(
@@ -21,6 +21,19 @@ def print_menu_root_sg():
         title="Manager Security Groups",
         border_style="blue",
     )
+
+def print_create_rule(ip_public:str):
+
+    options_menu = Text.from_markup(
+        f"[blue][1][/blue] Crear con IP Publica (solo tu) -> {ip_public}\n"
+        "[blue][2][/blue] Crear abierta a cualquier red -> 0.0.0.0/0\n"
+        "[yellow][3][/yellow] saltar creacion de regla para despues"
+    )
+
+    print_menu_panel(content=options_menu,
+                     title="Creacion de regla SSH",
+                     border_style="blue"
+                     )
 
 
 def print_menu_sg(sg_id: str, region_name: str):
@@ -40,7 +53,7 @@ def print_menu_sg(sg_id: str, region_name: str):
     grid.add_row("[blue][1][/blue]Listar reglas de entrada", "[dim cyan]│[/dim cyan]", "[blue][2][/blue]Listar reglas de salida")
     grid.add_row("[blue][3][/blue]Agregar regla de entrada", "[dim cyan]│[/dim cyan]", "[blue][4][/blue]Agregar regla de salida")
     grid.add_row("[blue][5][/blue]Eliminar regla de entrada", "[dim cyan]│[/dim cyan]", "[blue][6][/blue]eliminar regla de salida")
-    grid.add_row("[yellow][7][/yellow]Cambiar de Security Groups", "[dim cyan]│[/dim cyan]", "[yellow][8][/yellow]Volver al menu Principal")
+    grid.add_row("[yellow][7][/yellow]Cambiar de Security Groups", "[dim cyan]│[/dim cyan]", "[yellow][8][/yellow]Volver al menu anterior")
 
     console.print("\n\n")
     print_menu_panel(
@@ -63,3 +76,5 @@ def print_menu_deploy_sg():
         title="Manager SG",
         border_style="blue",
     )
+
+

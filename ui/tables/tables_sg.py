@@ -6,7 +6,8 @@ from ui.tables.base import print_table_panel
 COLUMNS_SG = [
     ("#", {"width": 4}),
     ("Group ID", {"style": "italic"}),
-    ("Description", {}),
+    ("Group Name", {}),
+    ("Description",{})
 ]
 
 COLUMNS_RULES = [
