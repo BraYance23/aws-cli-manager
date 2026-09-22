@@ -1,6 +1,6 @@
 import logging
 from ui import prompts
-from ui.tables.ami import print_table_ami
+from ui.tables.tables_ami import print_table_ami
 from config.aws_config import (
     VERSION_OS, TYPES_INSTANCES, OS_AVALIBLE,
     dict_type_instances, dict_os_general

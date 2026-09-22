@@ -110,11 +110,14 @@ def sg_root_menu(manager_root):
                     sg_controller.create_sg()
                 case "3":
                     sg_controller.delete_sg()
-                case "0":
+                case "4":
                     break
 
         except exceptions.AWSError as e:
             handle_aws_error(e.code)
+        except exceptions.UserCancelOperation:
+            print_message(message="Operacion cancelada",
+                          style_message="yellow italic")
            
 def kp_menu(manager_root):
 

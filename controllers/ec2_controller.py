@@ -2,9 +2,13 @@ import threading
 import logging
 from ui.messages import print_message,spinner
 from controllers.deploy_flow import build_instance_config
-from ui import prompts, panels, tables
+from ui import prompts
+from ui.tables import tables_ec2
+from ui.panels import panels_ec2
 from exceptions import InvalidOperationEC2
-from config.ec2_operations import parameter_operation_ec2, permissions_ec2
+from config.ec2_operations import (
+    parameter_operation_ec2, 
+    permissions_ec2)
 
 
 
@@ -52,7 +56,7 @@ class EC2Controller:
         while True:
 
             name_instance,config_instace = build_instance_config(manager_root=self.manager_root)
-            panels.build_panel_deploy_ec2(data=config_instace,name_instance=name_instance)
+            panels_ec2.build_panel_deploy_ec2(data=config_instace,name_instance=name_instance)
             confirmation = prompts.confirmation_config()
             match confirmation:
                  case "confirm":
@@ -75,7 +79,7 @@ class EC2Controller:
     def _show_instances(self,list_rows:list):
 
         print("\n\n")
-        tables.print_table_ec2(list_rows=list_rows,title="Listado de instancias")
+        tables_ec2.print_table_ec2(list_rows=list_rows,title="Listado de instancias")
 
     def show_instaces(self):
 
@@ -94,7 +98,7 @@ class EC2Controller:
         self._validate_state(instance_state=instance_state,operation=selection)
         msg_init,target_state,msg_finally = parameter_operation_ec2[selection]
         if target_state == "terminated":
-            panels.build_panel_destroy_ec2(data=data_instace)
+            panels_ec2.build_panel_destroy_ec2(data=data_instace)
             prompts.confimation_operation_destroy()
 
         metodos_ec2 = {
