@@ -20,3 +20,18 @@ def get_ip_public()-> str|None:
         except Exception:
             continue
     return None
+
+
+def resolve_ip_permissions(cidr_ip):
+
+    return{
+    "IpProtocol": "tcp",
+    "FromPort": 22,
+    "ToPort": 22,
+    "IpRanges": [
+        {
+            "CidrIp": cidr_ip,
+            "Description": "SSH"
+        }
+    ]
+}
