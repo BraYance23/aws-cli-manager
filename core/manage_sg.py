@@ -26,13 +26,6 @@ class ManageSecurityGroup:
         return response
 
     @handles_aws_error
-    def is_sg_in_use(self, sg_id: str) -> bool:
-        response = self.client_ec2.describe_network_interfaces(
-            Filters=[{"Name": "group-id", "Values": [sg_id]}]
-        )
-        return bool(response["NetworkInterfaces"])
-    
-    @handles_aws_error
     def get_sg_general(self)-> dict:
 
         response = self.client_ec2.describe_security_groups()
@@ -92,7 +85,10 @@ class ManageSecurityGroup:
             "list_rows_egress": list_rows_egress,
             "dict_rules_egress": dict_rules_egress
         }
-    
+
+    def clear_selection(self):
+        self.sg_id = None
+
     def format_data_sg_general(self,response:dict)-> tuple[list,dict]:
 
         dict_sg_id = {}
@@ -101,15 +97,19 @@ class ManageSecurityGroup:
         if not response["SecurityGroups"]:
             raise NoSecurityGroups(region=self.region_name)
         
-        for indice,valor in enumerate(response["SecurityGroups"],start=1):
-
+        for indice,security_group in enumerate(response["SecurityGroups"],start=1):
             list_rows.append([
                 str(indice),
-                valor.get("GroupId"),
-                valor.get("Description")
+                security_group["GroupId"],
+                security_group["GroupName"],
+                security_group["Description"]
             ])
-            dict_sg_id[str(indice)] = valor.get("GroupId")
-        
+
+            dict_sg_id[str(indice)] = {
+                "GroupId":security_group.get("GroupId"),
+                "GroupName":security_group["GroupName"],
+                "Description":security_group["Description"]
+            }
         return list_rows,dict_sg_id
 
     def format_data_vpc(self,response:dict)-> tuple[list,dict]:
@@ -150,37 +150,37 @@ class ManageSecurityGroup:
         return response["Return"]
 
     @handles_aws_error
-    def authorize_rule_ingress(self,ip_permissions:dict)-> dict:
+    def authorize_rule_ingress(self,sg_id:str,ip_permissions:dict)-> dict:
 
         response = self.client_ec2.authorize_security_group_ingress(
-            GroupId = self.sg_id,
+            GroupId = sg_id,
             IpPermissions = [ip_permissions]
         )
         return response["SecurityGroupRules"][0]
 
     @handles_aws_error
-    def revoke_rule_ingress(self,sg_rule_id:dict)-> dict:
+    def revoke_rule_ingress(self,sg_id,sg_rule_id:dict)-> dict:
 
         response = self.client_ec2.revoke_security_group_ingress(
-            GroupId = self.sg_id,
+            GroupId = sg_id,
             SecurityGroupRuleIds = [sg_rule_id]
         )
         return response["RevokedSecurityGroupRules"][0]
 
     @handles_aws_error
-    def authorize_rule_egress(self,ip_permissions:dict)-> dict:
+    def authorize_rule_egress(self,sg_id,ip_permissions:dict)-> dict:
             
         response = self.client_ec2.authorize_security_group_egress(
-            GroupId = self.sg_id,
+            GroupId = sg_id,
             IpPermissions = [ip_permissions]
         )
         return response["SecurityGroupRules"][0]
 
     @handles_aws_error 
-    def revoke_rule_egress(self,sg_rule_id:dict)-> dict:
+    def revoke_rule_egress(self,sg_id,sg_rule_id:dict)-> dict:
              
         response = self.client_ec2.revoke_security_group_egress(
-            GroupId = self.sg_id,
+            GroupId = sg_id,
             SecurityGroupRuleIds = [sg_rule_id]
         )
         return response["RevokedSecurityGroupRules"][0]
