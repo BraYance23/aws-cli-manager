@@ -40,13 +40,13 @@ def main():
                     region_name,location_name = select_region_name()
                     session_root = build_session(profile=profile,region_name=region_name)
                     manager_root = ManagerAWS(session_root=session_root,region_name=region_name)
-                    print_message(message="\nValidando credenciales...\nConectando con AWS...",style_message="green italic")
+                    print_message(message="Validando credenciales...\nConectando con AWS...",style_message="green italic")
                     time.sleep(1)
 
                     response = manager_root.ec2.verify_identity()
                     profile_name = response["Arn"].split("/")[1]
                     account_data = (response["Account"],profile_name,location_name,region_name)
-                    print_message("Conexion exitosa :D\n\n",style_message="bold bright_white")
+                    print_message("Conexion exitosa :D\n",style_message="bold bright_white")
                     logger.info(f"Sesion iniciada con perfil IAM : {profile_name}")
                 response_program = menu_services.root_menu(account_data=account_data,manager_root=manager_root)
                 match response_program:

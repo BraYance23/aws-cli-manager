@@ -28,6 +28,7 @@ AWS_ERROR_MESSAGES: dict[str, str] = {
     "InvalidPermission.Duplicate":      "La regla ya existe en el security group",
     "InvalidPermission.NotFound":       "La regla especificada no existe en el security group",
     "RulesPerSecurityGroupLimitExceeded": "Has alcanzado el límite de reglas en este security group",
+    "DependencyViolation":              "El Security Group tiene recursos asociados y no puede eliminarse.",
 
     # Errores de Subnet
     "InvalidSubnet.NotFound":           "La subnet especificada no existe",

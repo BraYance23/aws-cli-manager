@@ -12,7 +12,7 @@ from ui.console import console
 
 def print_message(message:str,style_message:str=""):
 
-    console.print(message,style=style_message,justify="center")
+    console.print(f"\n{message}\n",style=style_message,justify="center")
 
 def print_message_panel(color_panel:str,message:str,style_message:str=""):
 
