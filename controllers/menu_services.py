@@ -8,11 +8,13 @@ from ui.messages import handle_aws_error,print_message
 from ui.prompts import choice_options_menu
 from ui.console import center_text
 import exceptions
+from config.sg_opertions import operations_and_directions
 from config.menu_structure import (
     main_root, main_ec2, main_sg, main_key_pair, main_root_sg
 )
 from config.dashboard_config import (
-    dashboard_dirty, dashboard_services, summary_fallback
+    dashboard_dirty, dashboard_services, summary_fallback,
+    reset_data_dashboard
 )
 
 
@@ -33,11 +35,8 @@ def ec2_menu(manager_root):
                     input(center_text("Presione enter para continuar"))
                 case "2":
                     ec2_controller.run_ec2()
-                    dashboard_dirty["ec2"]["needs_update"] = True
                 case "3" | "4" |"5" | "6":
-                    change_dashboard = ec2_controller.operation_ec2(choice_ec2)
-                    if change_dashboard:
-                        dashboard_dirty["ec2"]["needs_update"] = True
+                    ec2_controller.operation_ec2(choice_ec2)
                 case "7":
                     break
         except exceptions.InvalidOperationEC2 as e:
@@ -58,7 +57,7 @@ def sg_menu(manager_root):
             menus.print_menu_sg(sg_id=manager_root.sg.sg_id,region_name=manager_root.region_name)
             options_sg = main_sg
             choice_operation = choice_options_menu(dict_options=options_sg)
-
+            
             match choice_operation:
                 case "1":
                     sg_controller.show_rules_sg(direction="ingress")
@@ -66,14 +65,12 @@ def sg_menu(manager_root):
                 case "2":
                     sg_controller.show_rules_sg(direction="egress")
                     input(center_text("Presione enter para continuar"))    
-                case "3":
-                    sg_controller.authorize_sg_rule(direction = "ingress")
-                case "4":
-                    sg_controller.authorize_sg_rule(direction = "egress")
-                case "5":
-                    sg_controller.revoke_sg_rule(direction = "ingress")
-                case "6":
-                    sg_controller.revoke_sg_rule(direction = "egress")
+                case "3"|"4"|"5"|"6":
+                    operation,direction = operations_and_directions[choice_operation]    
+                    sg_controller.operation_rules_sg(
+                        operation=operation,
+                        direction=direction
+                    )
                 case "7":
                     sg_controller.change_sg_id()
                 case "8":
@@ -135,10 +132,8 @@ def kp_menu(manager_root):
                     input(center_text("Presione enter para continuar"))
                 case "2":
                     kp_controller.generate_key_pairs()
-                    dashboard_dirty["kp"]["needs_update"] = True
                 case "3":
                     kp_controller.delete_key_pairs()
-                    dashboard_dirty["kp"]["needs_update"] = True
                 case "4":
                     break
         except (PermissionError,OSError) as e:
@@ -178,12 +173,6 @@ def root_menu(account_data,manager_root)-> Literal["change region","change profi
                     return "exit program"
         except exceptions.UserCancelOperation:
             print_message(message="Operacion cancelada",style_message="yellow italic")
-
-def reset_data_dashboard():
-
-    for service in dashboard_services:
-        dashboard_dirty[service]["needs_update"] = True
-        dashboard_dirty[service]["last_summary"] = None
 
 def get_summary_all(manager_root):
 
