@@ -1,6 +1,6 @@
 import logging
-from typing import Callable
 from config.menu_structure import main_sg_deploy,main_create_rule
+from config.dashboard_config import need_update_dashboard
 from ui.messages import print_message
 from ui.menus import menus_sg
 from ui import prompts
@@ -17,7 +17,7 @@ class SGController:
     def __init__(self,manager_root):
         self.manager_root = manager_root
 
-    def select_sg_id(self,context):
+    def select_sg_id(self,context)->dict:
 
         response = self.manager_root.sg.get_sg_general()
         rich_rows,dict_sg_id = self.manager_root.sg.format_data_sg_general(response)
@@ -39,6 +39,7 @@ class SGController:
         if self.authorize_sg_rule_automatic(sg_id=sg_id):
             print_message(message="Regla SSH asociado con exito al grupo de seguridad.",
                           style_message="green italic")
+        need_update_dashboard(service="sg")
         return sg_id
 
     def validate_state_sg(self,sg_name)->bool:
@@ -65,11 +66,11 @@ class SGController:
         
         if sg_id == self.manager_root.sg.sg_id:
             self.manager_root.sg.clear_selection()
-
+        
         print_message(message=f"\nGrupo de seguridad : {sg_id} eliminado con exito.\n",
                       style_message="green italic")
         logger.info(f"Grupo de seguridad : {sg_id} eliminado con exito de la region : {self.manager_root.region_name}")
-
+        need_update_dashboard(service="sg")
 
     def authorize_sg_rule_automatic(self,sg_id:str)->bool:
 
@@ -135,58 +136,65 @@ class SGController:
                     return ip_permissions
                 case "retry":
                     continue
-
-    def _authorize_sg_rule(self,direction,autorize_func,action_name):
-
-        ip_permissions = self._get_ip_permissions()
-        response = autorize_func(sg_id=self.manager_root.sg.sg_id,
-                                 ip_permissions=ip_permissions)
-        print_message(message=f"Puerto: {response['FromPort']} - {response["ToPort"]} abierto con exito en : {self.manager_root.sg.sg_id}",style_message="green italic")
-        logger.info(f"{action_name} en SG ID: {self.manager_root.sg.sg_id} | Rule ID : {response["SecurityGroupRuleId"]}")
-        self.show_rules_sg(direction=direction)
-
-    def authorize_sg_rule(self,direction):
-
-        if direction == "ingress":
-            self._authorize_sg_rule(direction=direction,
-                                   autorize_func=self.manager_root.sg.authorize_rule_ingress,
-                                   action_name="Autorize_ingress")
-        elif direction == "egress":
-            self._authorize_sg_rule(direction=direction,
-                                   autorize_func=self.manager_root.sg.authorize_rule_egress,
-                                   action_name="Autorize_egress")
-
+                
     def _get_rule_revoke(self,direction:str)-> str:
 
         response = self.manager_root.sg.get_sg_rules(self.manager_root.sg.sg_id)
         data_sg  = self.manager_root.sg.format_data_sg_rules(response)
         dict_rules = data_sg.get(f"dict_rules_{direction}")
-        self.show_rules_sg(direction)
+        list_rows = data_sg[f"list_rows_{direction}"]
+        direction_title = "entrada" if direction == "ingress" else "salida"
+        tables_sg.print_table_sg_rules(
+            title=f"Reglas de {direction_title}",
+            list_rows=list_rows
+        )
         selected_rule = prompts.choice_options_table(dict_data=dict_rules,context="de la regla de seguridad que desea eliminar ")
         return selected_rule
 
-    def _revoke_sg_rule(self,direction:str,revoke_fun:Callable,action_name:str):
+    def _authorize_sg_rule(self,direction):
+
+        dict_func = {"ingress": self.manager_root.sg.authorize_rule_ingress,
+                     "egress": self.manager_root.sg.authorize_rule_egress}
+
+        ip_permissions = self._get_ip_permissions()
+        func_core = dict_func[direction]
+        response = func_core(sg_id=self.manager_root.sg.sg_id,
+                                 ip_permissions=ip_permissions)
+        print_message(
+            message=f"Puerto: {response['FromPort']} - {response["ToPort"]} abierto con exito en : {self.manager_root.sg.sg_id}",
+            style_message="green italic")
+        logger.info(f"Authorize_{direction} en SG ID: {self.manager_root.sg.sg_id} | Rule ID : {response["SecurityGroupRuleId"]}")
+        self.show_rules_sg(direction=direction)
+
+
+    def _revoke_sg_rule(self,direction:str):
+
+        dict_func = {"ingress": self.manager_root.sg.revoke_rule_ingress,
+                     "egress": self.manager_root.sg.revoke_rule_egress}
 
         selected_rule = self._get_rule_revoke(direction=direction)
         panels_sg.build_panel_rules_sg(data=selected_rule,context="eliminar")
         prompts.confimation_operation_destroy()
         sg_rule_id = selected_rule["SecurityGroupRuleId"]
-        response = revoke_fun(sg_id=self.manager_root.sg.sg_id,
+        func_core = dict_func[direction]
+        response = func_core(sg_id=self.manager_root.sg.sg_id,
                               sg_rule_id=sg_rule_id)
 
-        logger.info(f"{action_name} en SG ID : {self.manager_root.sg.sg_id} | Rule ID : {sg_rule_id}")
-        print_message(message=f"Regla con protocolo : {response["IpProtocol"]} - Puerto : {response['ToPort']} eliminado con exito de SG ID: {self.manager_root.sg.sg_id}",style_message="green italic")
+        logger.info(f"Revoke_{direction} en SG ID : {self.manager_root.sg.sg_id} | Rule ID : {sg_rule_id}")
+        print_message(
+            message=f"Regla con protocolo : {response["IpProtocol"]} - Puerto : {response['ToPort']} eliminado con exito de SG ID: {self.manager_root.sg.sg_id}",
+            style_message="green italic")
 
-    def revoke_sg_rule(self,direction):
 
-        if direction == "ingress":
-            self._revoke_sg_rule(direction="ingress",
-                                 revoke_fun=self.manager_root.sg.revoke_rule_ingress,
-                                 action_name="Revoke_ingress")
-        elif direction == "egress":
-            self._revoke_sg_rule(direction="egress",
-                                 revoke_fun=self.manager_root.sg.revoke_rule_egress,
-                                 action_name="Revoke_egress")
+    def operation_rules_sg(self,operation,direction):
+
+        dict_operation = {
+            "Authorize": self._authorize_sg_rule,
+            "Revoke":self._revoke_sg_rule,        
+        }
+        dict_operation[operation](
+            direction=direction
+            )
 
     def resolve_sg_deploy(self):
 
@@ -201,7 +209,7 @@ class SGController:
                             return self.create_sg()
                         case "2":
                             try:
-                                return self.select_sg_id()
+                                return self.select_sg_id(context="asociar a su instancia")
                             except NoVpc as e:
                                     print_message(message=str(e),style_message="yellow italic")
 

@@ -1,5 +1,6 @@
 import logging
 from config.menu_structure import main_kp_deploy
+from config.dashboard_config import need_update_dashboard
 from ui.messages import print_message
 from ui.menus import print_menu_deploy_kp
 from ui import prompts
@@ -36,6 +37,7 @@ class KPController:
         response_save_key = self.manager_root.key_pair.save_key_pair(private_key,name_key)
         logger.info(f"llave SSH creada con exito | nombre de la llave : {name_key}")
         print_message(f"💾-Llave guardada con exito en : {response_save_key}",style_message="green italic")
+        need_update_dashboard(service="kp")
         return name_key
 
     def delete_key_pairs(self):
@@ -47,6 +49,7 @@ class KPController:
         self.manager_root.key_pair.delete_key_pair(key_name)
         logger.info(f"Llave SSH eliminada con exito | Nombre de llave : {key_name} - ID : {key_selected["KeyPairId"]}")
         print_message(message=f"Llave SSH : '{key_name}.pem' eliminada con exito.",style_message="green italic")
+        need_update_dashboard(service="kp")
 
 
     def resolve_kp_deploy(self):

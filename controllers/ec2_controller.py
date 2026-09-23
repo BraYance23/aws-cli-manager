@@ -6,6 +6,7 @@ from ui import prompts
 from ui.tables import tables_ec2
 from ui.panels import panels_ec2
 from exceptions import InvalidOperationEC2
+from config.dashboard_config import need_update_dashboard
 from config.ec2_operations import (
     parameter_operation_ec2, 
     permissions_ec2)
@@ -51,6 +52,23 @@ class EC2Controller:
         print_message(message=msg_success,style_message="green italic")
         return True
         
+        
+    def _preparate_data(self):
+
+        response = self.manager_root.ec2.describe_ec2()
+        dict_id_ec2,list_rows = self.manager_root.ec2.format_data_ec2(response)
+        return dict_id_ec2,list_rows
+
+    def _show_instances(self,list_rows:list):
+
+        print("\n\n")
+        tables_ec2.print_table_ec2(list_rows=list_rows,title="Listado de instancias")
+
+    def show_instaces(self):
+
+         dict_id_ec2,list_rows = self._preparate_data()
+         self._show_instances(list_rows=list_rows)
+
     def run_ec2(self):
         
         while True:
@@ -69,23 +87,8 @@ class EC2Controller:
                                 msg_success="Instancia desplegada con exito",
                                 target_state="running",
                                 list_instance_id=response)
+        need_update_dashboard(service="ec2")
         
-    def _preparate_data(self):
-
-        response = self.manager_root.ec2.describe_ec2()
-        dict_id_ec2,list_rows = self.manager_root.ec2.format_data_ec2(response)
-        return dict_id_ec2,list_rows
-
-    def _show_instances(self,list_rows:list):
-
-        print("\n\n")
-        tables_ec2.print_table_ec2(list_rows=list_rows,title="Listado de instancias")
-
-    def show_instaces(self):
-
-         dict_id_ec2,list_rows = self._preparate_data()
-         self._show_instances(list_rows=list_rows)
-
     def operation_ec2(self,selection):
 
         dict_id_ec2,list_rows = self._preparate_data()
@@ -115,5 +118,4 @@ class EC2Controller:
         
         dashboard_operations = ["3","5","6"]
         if selection in dashboard_operations:
-             return True
-        return False
+             need_update_dashboard(service="ec2")

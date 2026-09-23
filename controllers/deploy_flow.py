@@ -12,7 +12,7 @@ def build_instance_config(manager_root) -> tuple[str,dict]:
     ami_id = ami_controller.get_ami_id()
     type_machine = ami_controller.select_type_ec2()
     key_pair_id = kp_controller.resolve_kp_deploy()
-    sg_id = sg_controller.resolve_sg_deploy()
+    sg_id = sg_controller.resolve_sg_deploy()["GroupId"]
     min_count,max_count,name_instance = request_data_config_ec2()
 
     return name_instance,{
