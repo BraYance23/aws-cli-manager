@@ -1,5 +1,6 @@
 """
-Configuración del dashboard: caching y estado de servicios
+Configuración del dashboard: caching, estado de servicios y
+funciones para mutar el estado del dashboard.
 """
 
 dashboard_services = ["ec2", "sg", "kp"]
@@ -24,3 +25,13 @@ dashboard_dirty = {
         "last_summary": None
     }
 }
+
+def need_update_dashboard(service:str):
+
+    dashboard_dirty[service]["needs_update"] = True
+
+def reset_data_dashboard():
+
+    for service in dashboard_services:
+        dashboard_dirty[service]["needs_update"] = True
+        dashboard_dirty[service]["last_summary"] = None
